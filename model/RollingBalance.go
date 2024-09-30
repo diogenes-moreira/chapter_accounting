@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type RollingBalance struct {
 	gorm.Model
-	Movements []*Movement `json:"movements"`
+	Movements []*Movement `json:"movements" gorm:"many2many:RollingBalance_Movements;"`
 }
 
 func (b *RollingBalance) AddMovement(movement *Movement) {

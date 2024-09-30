@@ -9,7 +9,9 @@ import (
 	"os"
 )
 
-func GetPostgresConnection() (*gorm.DB, error) {
+var DB *gorm.DB
+
+func getPostgresConnection() (*gorm.DB, error) {
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	user := os.Getenv("DB_USER")
@@ -25,14 +27,19 @@ func GetPostgresConnection() (*gorm.DB, error) {
 	return db, nil
 }
 
-func Automigrate() {
-	db, err := GetPostgresConnection()
+func AutoMigrate() {
+	var err error
+	DB, err = getPostgresConnection()
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
 	// AutoMigrate your models
-	err = db.AutoMigrate(&model.Brother{}, &model.RollingBalance{}, &model.Chapter{})
+	err = DB.AutoMigrate(
+		&model.Movement{},
+		&model.Brother{},
+		&model.RollingBalance{},
+		&model.Chapter{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}
