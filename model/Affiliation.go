@@ -77,3 +77,15 @@ func (a *Affiliation) GrandChapterAmountDueAt(month uint) float64 {
 	}
 	return out
 }
+
+func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float64) float64 {
+	out := 0.0
+	for _, installment := range a.Installments {
+		if !installment.Paid {
+			installment.Amount = amount
+			out += greatChapterAmount - installment.GrandChapterAmount
+			installment.GrandChapterAmount = greatChapterAmount
+		}
+	}
+	return out
+}

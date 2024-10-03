@@ -12,7 +12,7 @@ type Chapter struct {
 	TreasurerRollingBalanceID    *uint           `json:"treasurer_rolling_balance_id"`
 	GrandChapterRollingBalance   *RollingBalance `json:"grand_chapter_rolling_balance"`
 	GrandChapterRollingBalanceID *uint           `json:"grand_chapter_rolling_balance_id"`
-	Affiliations                 []Affiliation   `json:"affiliations" gorm:"foreignKey:ChapterID"`
+	Affiliations                 []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
 }
 
 func (c *Chapter) AddMovement(movement *Movement) {
@@ -50,17 +50,69 @@ func (c *Chapter) PendingGrandChapterAmount() float64 {
 // TODO: Implementar el método AddAffiliation
 // TODO: Implementar el método AddExaltation
 // TODO: Implementar el método AddDeposit
-// TODO: Implementar el método AddExpense
-// TODO: Implementar el método AddBrotherExpense
-// TODO: Implementar el método AddBrotherIncome
-// TODO: Implementar el método AddBagIncome
-// TODO: Implementar el método UpdateInstallment
+
+func (c *Chapter) AddExpenses(amount float64, date time.Time, expenseType string) {
+	c.TreasurerRollingBalance.AddMovement(&Movement{
+		Amount:      amount,
+		Type:        expenseType,
+		Description: "Gasto " + expenseType,
+		Date:        date,
+	})
+
+}
+
+func (c *Chapter) AddBrotherExpense(amount float64, date time.Time, brother *Brother, expenseType string) {
+	affiliation := c.AffiliationOf(brother)
+	mov := Movement{
+		Amount:      amount,
+		Type:        expenseType,
+		Description: "Gasto pagado por Hermano" + brother.Name,
+		Date:        date,
+	}
+	if affiliation != nil {
+		affiliation.AddMovement(&mov)
+	} else {
+		c.AddMovement(&mov)
+	}
+
+}
+
+func (c *Chapter) AddBrotherIncome(amount float64, date time.Time, brother *Brother) {
+	affiliation := c.AffiliationOf(brother)
+	mov := Movement{
+		Amount:      amount,
+		Type:        MovementTypeBrotherIncome,
+		Description: "Ingreso de Hermano" + brother.Name,
+		Date:        date,
+	}
+	if affiliation != nil {
+		affiliation.AddMovement(&mov)
+	} else {
+		c.AddMovement(&mov)
+	}
+
+}
+
+func (c *Chapter) AddBagIncome(amount float64, date time.Time) {
+	c.TreasurerRollingBalance.AddMovement(&Movement{
+		Amount:      amount,
+		Type:        MovementTypeBagIncome,
+		Description: "Ingreso de Saco",
+		Date:        date,
+	})
+}
+
 func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64) {
 	amount = 0.0
 	for _, affiliation := range c.Affiliations {
 		amount += affiliation.UpdateInstallment(amount, greatChapterAmount)
 	}
-
+	c.GrandChapterRollingBalance.AddMovement(&Movement{
+		Amount:  amount,
+		Type:    AdjustmentOfInstallments,
+		Receipt: "",
+		Date:    time.Time{},
+	})
 }
 
 func (c *Chapter) GenerateGrandChapterMonthlyDebit(month uint) {
@@ -74,4 +126,13 @@ func (c *Chapter) GenerateGrandChapterMonthlyDebit(month uint) {
 		Receipt: "",
 		Date:    time.Time{},
 	})
+}
+
+func (c *Chapter) AffiliationOf(brother *Brother) *Affiliation {
+	for _, affiliation := range c.Affiliations {
+		if *affiliation.BrotherID == brother.ID {
+			return affiliation
+		}
+	}
+	return nil
 }

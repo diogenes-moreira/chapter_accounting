@@ -8,4 +8,5 @@ and shares with the community a useful tool to manage the chapter resources.
 Right now, it's been draft.
 The time will be
 Time will be my companion in making this a useful tool for everyone.
+TODO: I18N  - Internationalization
 
