@@ -6,6 +6,7 @@ import (
 )
 
 func CreateChapter(chapter *model.Chapter) error {
+	chapter.Init()
 	if err := db.DB.Create(chapter).Error; err != nil {
 		return err
 	}

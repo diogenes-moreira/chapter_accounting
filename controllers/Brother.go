@@ -6,123 +6,124 @@ import (
 	"argentina-tresury/services"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
 	"strconv"
 )
 
-const chapterPath = "/chapters"
-const chapterPathId = chapterPath + "/{id}"
+const brotherPath = "/brothers"
+const brotherPathId = brotherPath + "/{id}"
 
-func RegisterChapterRoutesOn(r *mux.Router) {
-	r.HandleFunc(chapterPath+"/view", GetChaptersView).Methods("GET")
-	r.HandleFunc(chapterPath, CreateChapter).Methods("POST")
-	r.HandleFunc(chapterPath, GetChapters).Methods("GET")
-	r.HandleFunc(chapterPathId, GetChapter).Methods("GET")
-	r.HandleFunc(chapterPathId, UpdateChapter).Methods("PUT")
-	r.HandleFunc(chapterPathId, DeleteChapter).Methods("DELETE")
+func RegisterBrotherRoutesOn(r *mux.Router) {
+	r.HandleFunc(brotherPath+"/view", GetBrothersView).Methods("GET")
+	r.HandleFunc(brotherPath, CreateBrother).Methods("POST")
+	r.HandleFunc(brotherPath, GetBrothers).Methods("GET")
+	r.HandleFunc(brotherPathId, GetBrother).Methods("GET")
+	r.HandleFunc(brotherPathId, UpdateBrother).Methods("PUT")
+	r.HandleFunc(brotherPathId, DeleteBrother).Methods("DELETE")
 }
 
-func GetChaptersView(w http.ResponseWriter, r *http.Request) {
-	templateChapters, err := parseTemplate("templates/chapters.html")
+func GetBrothersView(w http.ResponseWriter, r *http.Request) {
+	templateBrothers, err := template.ParseFiles("templates/brothers.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateChapters.Execute(w, nil)
+	err = templateBrothers.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// CreateChapter creates a new chapter
-func CreateChapter(w http.ResponseWriter, r *http.Request) {
-	var chapter model.Chapter
-	if err := json.NewDecoder(r.Body).Decode(&chapter); err != nil {
+// CreateBrother creates a new brother
+func CreateBrother(w http.ResponseWriter, r *http.Request) {
+	var brother model.Brother
+	if err := json.NewDecoder(r.Body).Decode(&brother); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := services.CreateChapter(&chapter)
+	err := services.CreateBrother(&brother)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(w).Encode(chapter)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-// GetChapters returns all chapters
-func GetChapters(w http.ResponseWriter, r *http.Request) {
-	chapters, err := services.GetChapters()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(chapters)
+	err = json.NewEncoder(w).Encode(brother)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// GetChapter returns a chapter by id
-func GetChapter(w http.ResponseWriter, r *http.Request) {
+// GetBrothers returns all brothers
+func GetBrothers(w http.ResponseWriter, r *http.Request) {
+	brothers, err := services.GetBrothers()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(brothers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// GetBrother returns a brother by id
+func GetBrother(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	chapter, err := services.GetChapter(uint(id))
+	brother, err := services.GetBrother(uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(w).Encode(chapter)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-// UpdateChapter updates a chapter by id
-func UpdateChapter(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var chapter model.Chapter
-	if err := json.NewDecoder(r.Body).Decode(&chapter); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	chapter.ID = uint(id)
-	err = services.UpdateChapter(&chapter)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(chapter)
+	err = json.NewEncoder(w).Encode(brother)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// DeleteChapter deletes a chapter by id
-func DeleteChapter(w http.ResponseWriter, r *http.Request) {
+// UpdateBrother updates a brother by id
+func UpdateBrother(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = db.DB.Delete(&model.Chapter{}, id).Error
+	var brother model.Brother
+	if err := json.NewDecoder(r.Body).Decode(&brother); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	brother.ID = uint(id)
+	err = services.UpdateBrother(&brother)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(brother)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// DeleteBrother deletes a brother by id
+func DeleteBrother(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = db.DB.Delete(&model.Brother{}, id).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

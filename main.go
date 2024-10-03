@@ -22,6 +22,7 @@ func InitServer() {
 	r := mux.NewRouter()
 	controllers.InitView(r)
 	controllers.RegisterChapterRoutesOn(r)
+	controllers.RegisterBrotherRoutesOn(r)
 	controllers.RegisterIndex(r)
 	log.Fatal(http.ListenAndServe(os.Getenv("LISTENER"), r))
 }

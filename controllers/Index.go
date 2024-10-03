@@ -10,8 +10,12 @@ func RegisterIndex(r *mux.Router) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-
-	err := Templates.Execute(w, nil)
+	template, err := parseTemplate("index.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = template.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
