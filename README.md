@@ -9,4 +9,5 @@ Right now, it's been draft.
 The time will be
 Time will be my companion in making this a useful tool for everyone.
 TODO: I18N  - Internationalization
+TODO: REfactor - Refactor the code movementtype 
 

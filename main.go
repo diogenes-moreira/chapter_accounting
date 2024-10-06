@@ -2,7 +2,7 @@ package main
 
 import (
 	"argentina-tresury/controllers"
-	"argentina-tresury/db"
+	"argentina-tresury/model"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
@@ -23,12 +23,14 @@ func InitServer() {
 	controllers.InitView(r)
 	controllers.RegisterChapterRoutesOn(r)
 	controllers.RegisterBrotherRoutesOn(r)
+	controllers.RegisterTreasuryRoutesOn(r)
 	controllers.RegisterIndex(r)
+	controllers.RegisterMovementTypeRoutesOn(r)
 	log.Fatal(http.ListenAndServe(os.Getenv("LISTENER"), r))
 }
 
 func InitDb() {
-	db.AutoMigrate()
+	model.AutoMigrate()
 }
 
 func initEnvironment() {

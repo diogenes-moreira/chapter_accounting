@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+{{template "navbar.html"}}
+    <div id="app" class="container mt-5">
+        <treasury-movement></treasury-movement>
+        <h1 class="mb-4">{{ .title }}</h1>
+        <treasury-app></treasury-app>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="/static/js/Treasury.js"></script>
+</body>
+</html>

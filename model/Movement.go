@@ -7,17 +7,22 @@ import (
 
 type Movement struct {
 	gorm.Model
-	Amount      float64   `json:"amount"`
-	Type        string    `json:"type"`
-	Receipt     string    `json:"receipt"`
-	Date        time.Time `json:"date"`
-	Description string    `json:"description"`
+	MovementTypeID *uint         `json:"movement_type_id"`
+	MovementType   *MovementType `json:"movement_type"`
+	Amount         float64       `json:"amount"`
+	Receipt        string        `json:"receipt"`
+	Date           time.Time     `json:"date"`
+	Description    string        `json:"description"`
 }
 
-func (m Movement) Credit() bool {
-	return IsCredit(m.Type)
+func (m *Movement) Credit() bool {
+	return m.MovementType.Credit
 }
 
-func (m Movement) Debit() bool {
+func (m *Movement) Debit() bool {
 	return !m.Credit()
+}
+
+func (m *Movement) Expense() bool {
+	return m.MovementType.Expense
 }

@@ -21,3 +21,31 @@ func (d *Deposit) AddInstallments(installments []*Installment) {
 
 	}
 }
+
+func (d *Deposit) CreateMovement() (*Movement, error) {
+	mt, err := GetDeposit()
+	if err != nil {
+		return nil, err
+	}
+	return &Movement{
+		Amount:       d.Amount,
+		MovementType: mt,
+		Description:  "Depósito de en la Tesorería del Capítulo",
+		Date:         d.DepositDate,
+	}, nil
+
+}
+
+func (d *Deposit) GrandChapterMovement() (*Movement, error) {
+	mt, err := GetGreatChapterDeposit()
+	if err != nil {
+		return nil, err
+
+	}
+	return &Movement{
+		Amount:       d.Amount,
+		MovementType: mt,
+		Description:  "Depósito de en la Tesorería del Gran Capítulo",
+		Date:         d.DepositDate,
+	}, nil
+}

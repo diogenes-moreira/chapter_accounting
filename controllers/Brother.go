@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"argentina-tresury/db"
 	"argentina-tresury/model"
 	"argentina-tresury/services"
 	"encoding/json"
@@ -123,7 +122,7 @@ func DeleteBrother(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = db.DB.Delete(&model.Brother{}, id).Error
+	err = model.DB.Delete(&model.Brother{}, id).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

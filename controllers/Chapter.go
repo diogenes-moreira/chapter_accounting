@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"argentina-tresury/db"
 	"argentina-tresury/model"
 	"argentina-tresury/services"
 	"encoding/json"
@@ -23,7 +22,7 @@ func RegisterChapterRoutesOn(r *mux.Router) {
 }
 
 func GetChaptersView(w http.ResponseWriter, r *http.Request) {
-	templateChapters, err := parseTemplate("templates/chapters.html")
+	templateChapters, err := parseTemplate("chapters.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -122,7 +121,7 @@ func DeleteChapter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = db.DB.Delete(&model.Chapter{}, id).Error
+	err = model.DB.Delete(&model.Chapter{}, id).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

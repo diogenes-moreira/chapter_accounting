@@ -21,16 +21,21 @@ type Installment struct {
 	Affiliation        *Affiliation `json:"affiliation"`
 }
 
-func (i *Installment) Apply() {
+func (i *Installment) Apply() error {
 	if !i.Paid && i.Amount > i.Affiliation.Balance {
+		mt, err := GetInstalmentCancellation()
+		if err != nil {
+			return err
+		}
 		i.Paid = true
 		i.Affiliation.AddMovement(
 			&Movement{
-				Type:        InstalmentCancellation,
-				Amount:      i.Amount,
-				Description: "Cancelación de " + i.Description,
-				Date:        time.Now()})
+				MovementType: mt,
+				Amount:       i.Amount,
+				Description:  "Cancelación de " + i.Description,
+				Date:         time.Now()})
 	}
+	return nil
 }
 
 func (i *Installment) IsDue() bool {

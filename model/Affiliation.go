@@ -13,7 +13,7 @@ type Affiliation struct {
 	Brother          *Brother       `json:"brother"`
 	ChapterID        *uint          `json:"chapter_id"`
 	Chapter          *Chapter       `json:"chapter"`
-	Installments     []*Installment `json:"installments" gorm:"foreignKey:AfiliacionID"`
+	Installments     []*Installment `json:"installments" gorm:"foreignKey:AffiliationID"`
 	StartDate        time.Time      `json:"start_date"`
 	EndDate          *time.Time     `json:"end_date"` // Puede ser nulo si la afiliación está activa
 	RollingBalance   RollingBalance `json:"rolling_balance"`
@@ -30,16 +30,20 @@ func (a *Affiliation) AddMovement(movement *Movement) {
 }
 
 func (a *Affiliation) AddMovementTo(current float64, movement *Movement) float64 {
-	if movement.Credit() {
+	if movement.Credit() || movement.Expense() {
 		return current + movement.Amount
 	}
 	return current - movement.Amount
 }
 
-func (a *Affiliation) ApplyInstallments() {
+func (a *Affiliation) ApplyInstallments() error {
 	for _, installment := range a.Installments {
-		installment.Apply()
+		err := installment.Apply()
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (a *Affiliation) AddInstallment(installment *Installment) {
@@ -88,4 +92,30 @@ func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float
 		}
 	}
 	return out
+}
+
+func (a *Affiliation) BrotherName() string {
+	return a.Brother.FirstName + " " + a.Brother.LastNames
+}
+
+func (a *Affiliation) AddCharge(charge *ChargeType) {
+	if charge != nil && !a.Honorary {
+		a.Installments = append(a.Installments, &Installment{
+			OnTheSpot:          true,
+			Description:        charge.Name,
+			Amount:             charge.Amount,
+			DueDate:            time.Now(),
+			GrandChapterAmount: charge.GreatChapterAmount,
+			Paid:               false,
+		})
+	}
+}
+
+func (a *Affiliation) SetChapter(c *Chapter) {
+	a.Chapter = c
+	if !a.Honorary {
+		for _, installment := range c.PeriodPendingInstallments(a.Brother) {
+			a.AddInstallment(installment)
+		}
+	}
 }

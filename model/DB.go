@@ -1,7 +1,6 @@
-package db
+package model
 
 import (
-	"argentina-tresury/model"
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -36,10 +35,10 @@ func AutoMigrate() {
 
 	// AutoMigrate your models
 	err = DB.AutoMigrate(
-		&model.Movement{},
-		&model.Brother{},
-		&model.RollingBalance{},
-		&model.Chapter{})
+		&Movement{},
+		&Brother{},
+		&RollingBalance{},
+		&Chapter{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}
