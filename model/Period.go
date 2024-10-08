@@ -7,13 +7,10 @@ import (
 
 type Period struct {
 	gorm.Model
-	Year                  int `json:"year"`
-	TotalInstallments     int `json:"total_installments"`
-	FirstMonthInstallment int `json:"first_month_installment"`
-}
-
-func (p *Period) IsCurrent() bool {
-	return p.Year == time.Now().Year()
+	Year                  int  `json:"year"`
+	TotalInstallments     int  `json:"total_installments"`
+	FirstMonthInstallment int  `json:"first_month_installment"`
+	Current               bool `json:"current"`
 }
 
 // PendingInstallments returns the installments that are pending for this period

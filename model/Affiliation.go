@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"gorm.io/gorm"
 	"time"
 )
@@ -18,7 +19,7 @@ type Affiliation struct {
 	EndDate          *time.Time     `json:"end_date"` // Puede ser nulo si la afiliación está activa
 	RollingBalance   RollingBalance `json:"rolling_balance"`
 	RollingBalanceID uint           `json:"rolling_balance_id"`
-	Balance          float64        `json:"balance"`
+	Balance          float64        `json:"balance" gorm:"-"`
 	Honorary         bool           `json:"honorary"`
 }
 
@@ -52,6 +53,7 @@ func (a *Affiliation) AddInstallment(installment *Installment) {
 }
 
 func (a *Affiliation) NetBalance() float64 {
+	a.Balance = a.RollingBalance.Balance(a)
 	out := 0.0
 	for _, installment := range a.Installments {
 		if !installment.Paid && installment.IsDue() {
@@ -118,4 +120,19 @@ func (a *Affiliation) SetChapter(c *Chapter) {
 			a.AddInstallment(installment)
 		}
 	}
+}
+
+func (a *Affiliation) IsPeriod(p uint) bool {
+	return *a.PeriodID == p
+}
+
+func (a *Affiliation) MarshalJSON() ([]byte, error) {
+	type Alias Affiliation
+	return json.Marshal(&struct {
+		*Alias
+		Overdue float64 `json:"overdue"`
+	}{
+		Alias:   (*Alias)(a),
+		Overdue: a.NetBalance(),
+	})
 }

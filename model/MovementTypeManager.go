@@ -13,7 +13,7 @@ func GetManualMovementTypes() ([]*MovementType, error) {
 	}
 	for _, movementType := range movementTypes {
 		if movementType.Manual {
-			movementTypes = append(movementTypes, movementType)
+			out = append(out, movementType)
 		}
 	}
 	return out, nil
@@ -63,6 +63,15 @@ func InitMovementTypes() {
 	DB.Create(&MovementType{Code: _deposit, Description: "Depósito", Expense: false, Credit: false, Manual: true})
 	DB.Create(&MovementType{Code: _greatChapterDeposit, Description: "Depósito de Gran Capítulo", Expense: false,
 		Credit: true, Manual: false})
+	DB.Create(&MovementType{Code: _initialAmount, Description: "Monto inicial", Expense: false, Credit: true,
+		Manual: false})
+	DB.Create(&MovementType{Code: _stationery_items, Description: "Artículos de librería", Expense: true, Credit: false,
+		Manual: true})
+	DB.Create(&MovementType{Code: _agape, Description: "Ágape", Expense: true, Credit: false, Manual: true})
+	DB.Create(&MovementType{Code: _donation, Description: "Donación", Expense: false, Credit: true, Manual: true})
+	DB.Create(&MovementType{Code: _other, Description: "Otro gasto", Expense: true, Credit: false, Manual: true})
+	DB.Create(&MovementType{Code: _otherIncome, Description: "Otro ingreso", Expense: false, Credit: true,
+		Manual: true})
 }
 
 func GetCapitationPayment() (*MovementType, error) {
@@ -105,3 +114,9 @@ const _bagIncome = "bag_income"
 const _brotherIncome = "brother_income"
 const _deposit = "deposit"
 const _greatChapterDeposit = "great_chapter_deposit"
+const _initialAmount = "initial_amount"
+const _stationery_items = "stationery_items"
+const _agape = "agape"
+const _donation = "donation"
+const _other = "other expense"
+const _otherIncome = "other income"

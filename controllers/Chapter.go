@@ -14,11 +14,36 @@ const chapterPathId = chapterPath + "/{id}"
 
 func RegisterChapterRoutesOn(r *mux.Router) {
 	r.HandleFunc(chapterPath+"/view", GetChaptersView).Methods("GET")
+	r.HandleFunc(chapterPathId+"/affiliations/{period}", GetChaptersAffiliations).Methods("GET")
 	r.HandleFunc(chapterPath, CreateChapter).Methods("POST")
 	r.HandleFunc(chapterPath, GetChapters).Methods("GET")
 	r.HandleFunc(chapterPathId, GetChapter).Methods("GET")
 	r.HandleFunc(chapterPathId, UpdateChapter).Methods("PUT")
 	r.HandleFunc(chapterPathId, DeleteChapter).Methods("DELETE")
+}
+
+func GetChaptersAffiliations(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	period, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+	}
+	affiliations, err := services.GetChapterAffiliations(uint(id), uint(period))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(writer).Encode(affiliations)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func GetChaptersView(w http.ResponseWriter, r *http.Request) {

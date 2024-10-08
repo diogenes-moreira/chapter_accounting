@@ -23,10 +23,32 @@ func GetChapters() ([]model.Chapter, error) {
 
 func GetChapter(u uint) (*model.Chapter, error) {
 	var chapter model.Chapter
-	if err := model.DB.Preload("TreasurerRollingBalance").Preload("TreasurerRollingBalance.Movements").First(&chapter, u).Error; err != nil {
+	if err := model.DB.
+		Preload(`TreasurerRollingBalance`).
+		Preload(`TreasurerRollingBalance.Movements`).
+		Preload("TreasurerRollingBalance.Movements.MovementType").First(&chapter, u).Error; err != nil {
 		return nil, err
 	}
+	chapter.TreasurerRollingBalance.Adder = &chapter
 	return &chapter, nil
+}
+
+func GetChapterAffiliations(u uint, p uint) ([]*model.Affiliation, error) {
+	var chapter model.Chapter
+	var out []*model.Affiliation
+	if err := model.DB.Preload("Affiliations").
+		Preload("Affiliations.Brother").
+		Preload("Affiliations.RollingBalance").
+		Preload("Affiliations.Installments").
+		Preload("Affiliations.Period").First(&chapter, u).Error; err != nil {
+		return nil, err
+	}
+	for _, affiliation := range chapter.Affiliations {
+		if affiliation.IsPeriod(p) {
+			out = append(out, affiliation)
+		}
+	}
+	return out, nil
 }
 
 func UpdateChapter(m *model.Chapter) error {

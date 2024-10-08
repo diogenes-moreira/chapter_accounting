@@ -38,7 +38,13 @@ func AutoMigrate() {
 		&Movement{},
 		&Brother{},
 		&RollingBalance{},
-		&Chapter{})
+		&Chapter{},
+		&Affiliation{},
+		&Installment{},
+		&Period{},
+		&ChargeType{},
+		&Deposit{},
+		&MovementType{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}

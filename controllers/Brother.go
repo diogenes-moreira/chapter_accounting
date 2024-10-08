@@ -5,7 +5,6 @@ import (
 	"argentina-tresury/services"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -23,7 +22,7 @@ func RegisterBrotherRoutesOn(r *mux.Router) {
 }
 
 func GetBrothersView(w http.ResponseWriter, r *http.Request) {
-	templateBrothers, err := template.ParseFiles("templates/brothers.html")
+	templateBrothers, err := parseTemplate("brothers.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

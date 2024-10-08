@@ -1,7 +1,10 @@
 Vue.component('treasury-app', {
     data() {
         return {
-            movements: []
+            movements: [],
+            balance: 0,
+            incomes: 0,
+            outcomes: 0
         };
     },
     mounted() {
@@ -16,13 +19,38 @@ Vue.component('treasury-app', {
             fetch('/treasury/1')
                 .then(response => response.json())
                 .then(data => {
-                    this.movements = data.movements;
+                    this.movements = []
+                    let Format = new Intl.NumberFormat('es-AR',
+                        { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 , currencySign: 'accounting' });
+                    this.balance = Format.format(data.balance);
+                    this.incomes = Format.format(data.incomes);
+                    this.outcomes = Format.format(data.outcomes);
+                    for (let movement of data.movements) {
+                        movement.date = new Date(movement.date).toLocaleDateString();
+                        movement.amount =  Format.format(movement.amount);
+                        this.movements.push(movement);
+                    }
                 });
         }
     },
     template: `
         <div>
             <h2>Tesoreria</h2>
+            <h3>Resumen</h3>
+            <div class="row">
+                <div class="col">
+                    <b>Ingresos</b>
+                    <p>{{ incomes }}</p>
+                </div>
+                <div class="col">
+                    <b>Egresos</b>
+                    <p>{{ outcomes }}</p>
+                </div>
+                <div class="col">
+                    <b>Balance</b>
+                    <p>{{ balance }}</p>
+                </div>
+            </div>
             <table class="table">
                 <thead>
                     <tr>
@@ -31,17 +59,19 @@ Vue.component('treasury-app', {
                         <th>Tipo</th>
                         <th>Credito</th>
                         <th>Debito</th>
+                        <th>Recibo</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="movement in movements">
                         <td>{{ movement.date }}</td>
                         <td>{{ movement.description }}</td>
-                        <td>{{ movement.type }}</td>
-                        <td v-if="movement.credit">{{ movement.amount }}</td>
+                        <td>{{ movement.movement_type.description }}</td>
+                        <td v-if="movement.movement_type.credit">{{ movement.amount }}</td>
                         <td v-else></td>
-                        <td v-if="!movement.debit">{{ movement.amount }}</td>
-                        <td v-else></td>  
+                        <td v-if="!movement.movement_type.credit">{{ movement.amount }}</td>
+                        <td v-else></td>
+                        <td>{{ movement.receipt }}</td>  
                     </tr>
                 </tbody></table></div>`
 });
@@ -49,7 +79,7 @@ Vue.component('treasury-app', {
 Vue.component('treasury-movement', {
     data() {
         return {
-            movement: { date: '', description: '', type: '', amount: 0 },
+            movement: { date: '', description: '', type: '', amount: 0, receipt: '' },
             types: []
         };
     },
@@ -58,7 +88,7 @@ Vue.component('treasury-movement', {
     },
     methods: {
         fetchTypes() {
-            fetch('/movement-types')
+            fetch('/manual-types')
                 .then(response => response.json())
                 .then(data => {
                     this.types = data;
@@ -73,12 +103,17 @@ Vue.component('treasury-movement', {
                 .then(response => response.json())
                 .then(data => {
                     this.$root.$emit('movement-created', data);
-                    this.movement = { date: '', description: '', type: '', amount: 0 };
+                    this.movement = { date: '', description: '', type: '', amount: 0, receipt: '' };
                 });
         }
     },
     template: `
         <div>
+        <div>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCreate" 
+            aria-expanded="false" aria-controls="collapseCreate">Create Movement</button>
+        </div>
+        <div class="collapse" id="collapseCreate">
             <h2>Create Movement</h2>
             <form @submit.prevent="createMovement">
                 <div class="form-group">
@@ -101,6 +136,7 @@ Vue.component('treasury-movement', {
                 </div>
                 <button type="submit" class="btn btn-primary">Create</button>
             </form>
+        </div>
         </div>`
 });
 

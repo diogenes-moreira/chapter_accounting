@@ -26,6 +26,8 @@ func InitServer() {
 	controllers.RegisterTreasuryRoutesOn(r)
 	controllers.RegisterIndex(r)
 	controllers.RegisterMovementTypeRoutesOn(r)
+	controllers.RegisterAffiliationRoutesOn(r)
+	controllers.RegisterPeriodRoutesOn(r)
 	log.Fatal(http.ListenAndServe(os.Getenv("LISTENER"), r))
 }
 

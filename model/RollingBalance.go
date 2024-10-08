@@ -1,10 +1,24 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"encoding/json"
+	"gorm.io/gorm"
+)
 
 type RollingBalance struct {
 	gorm.Model
-	Movements []*Movement `json:"movements" gorm:"many2many:RollingBalance_Movements;"`
+	Movements []*Movement   `json:"movements" gorm:"many2many:RollingBalance_Movements;"`
+	Adder     MovementAdder `json:"-" gorm:"-"`
+}
+
+func (b *RollingBalance) TotalOutcomes() float64 {
+	out := 0.0
+	for _, movement := range b.Movements {
+		if movement.Debit() {
+			out += movement.Amount
+		}
+	}
+	return out
 }
 
 func (b *RollingBalance) AddMovement(movement *Movement) {
@@ -53,6 +67,21 @@ func (b *RollingBalance) Expenses() []*Movement {
 		}
 	}
 	return out
+}
+
+func (b *RollingBalance) MarshalJSON() ([]byte, error) {
+	type Alias RollingBalance
+	return json.Marshal(&struct {
+		*Alias
+		Balance  float64 `json:"balance"`
+		Incomes  float64 `json:"incomes"`
+		Outcomes float64 `json:"outcomes"`
+	}{
+		Alias:    (*Alias)(b),
+		Balance:  b.Balance(b.Adder),
+		Incomes:  b.TotalIncomes(),
+		Outcomes: b.TotalOutcomes(),
+	})
 }
 
 type MovementAdder interface {
