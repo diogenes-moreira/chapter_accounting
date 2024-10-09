@@ -33,7 +33,7 @@ func GetChapter(u uint) (*model.Chapter, error) {
 	return &chapter, nil
 }
 
-func GetChapterAffiliations(u uint, p uint) ([]*model.Affiliation, error) {
+func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 	var chapter model.Chapter
 	var out []*model.Affiliation
 	if err := model.DB.Preload("Affiliations").
@@ -44,7 +44,7 @@ func GetChapterAffiliations(u uint, p uint) ([]*model.Affiliation, error) {
 		return nil, err
 	}
 	for _, affiliation := range chapter.Affiliations {
-		if affiliation.IsPeriod(p) {
+		if affiliation.IsCurrent() {
 			out = append(out, affiliation)
 		}
 	}
@@ -58,20 +58,10 @@ func UpdateChapter(m *model.Chapter) error {
 	return nil
 }
 
-func CreateAffiliation(brotherId uint, chapterId uint, isHonorary bool) error {
-	chapter := &model.Chapter{}
-	brother := &model.Brother{}
-	if err := model.DB.First(&chapter, chapterId).Error; err != nil {
-		return err
-	}
-	if err := model.DB.First(&brother, brotherId).Error; err != nil {
-		return err
-	}
-
-	affiliation := model.Affiliation{
+func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorary bool) (*model.Affiliation, error) {
+	affiliation := &model.Affiliation{
 		Period:         chapter.CurrentPeriod,
 		Brother:        brother,
-		Chapter:        chapter,
 		Installments:   []*model.Installment{},
 		StartDate:      time.Now(),
 		EndDate:        nil,
@@ -81,7 +71,8 @@ func CreateAffiliation(brotherId uint, chapterId uint, isHonorary bool) error {
 	}
 
 	if err := model.DB.Create(affiliation).Error; err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	affiliation.SetChapter(chapter)
+	return affiliation, nil
 }

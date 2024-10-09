@@ -3,32 +3,14 @@ package main
 import (
 	"argentina-tresury/controllers"
 	"argentina-tresury/model"
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
-	"net/http"
-	"os"
 )
 
 func main() {
 	initEnvironment()
 	InitDb()
-
-	InitServer()
-
-}
-
-func InitServer() {
-	r := mux.NewRouter()
-	controllers.InitView(r)
-	controllers.RegisterChapterRoutesOn(r)
-	controllers.RegisterBrotherRoutesOn(r)
-	controllers.RegisterTreasuryRoutesOn(r)
-	controllers.RegisterIndex(r)
-	controllers.RegisterMovementTypeRoutesOn(r)
-	controllers.RegisterAffiliationRoutesOn(r)
-	controllers.RegisterPeriodRoutesOn(r)
-	log.Fatal(http.ListenAndServe(os.Getenv("LISTENER"), r))
+	controllers.InitServer()
 }
 
 func InitDb() {

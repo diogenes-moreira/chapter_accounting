@@ -9,16 +9,37 @@ import (
 	"strconv"
 )
 
-const brotherPath = "/brothers"
+const brotherPath = "/api/brothers"
 const brotherPathId = brotherPath + "/{id}"
 
 func RegisterBrotherRoutesOn(r *mux.Router) {
-	r.HandleFunc(brotherPath+"/view", GetBrothersView).Methods("GET")
+	r.HandleFunc("/brothers/view", GetBrothersView).Methods("GET")
+	r.HandleFunc(brotherPath+"/exaltation", CreateExaltation).Methods("POST")
 	r.HandleFunc(brotherPath, CreateBrother).Methods("POST")
 	r.HandleFunc(brotherPath, GetBrothers).Methods("GET")
 	r.HandleFunc(brotherPathId, GetBrother).Methods("GET")
 	r.HandleFunc(brotherPathId, UpdateBrother).Methods("PUT")
 	r.HandleFunc(brotherPathId, DeleteBrother).Methods("DELETE")
+}
+
+type Exaltation struct {
+	Brother    *model.Brother `json:"brother"`
+	IsHonorary bool           `json:"is_honorary"`
+}
+
+func CreateExaltation(w http.ResponseWriter, r *http.Request) {
+	var exaltation Exaltation
+
+	if err := json.NewDecoder(r.Body).Decode(&exaltation); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err := services.CreateExaltation(exaltation.Brother, exaltation.IsHonorary)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func GetBrothersView(w http.ResponseWriter, r *http.Request) {

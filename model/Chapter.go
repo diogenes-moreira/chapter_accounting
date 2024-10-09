@@ -13,8 +13,9 @@ type Chapter struct {
 	GrandChapterRollingBalance   *RollingBalance `json:"grand_chapter_rolling_balance"`
 	GrandChapterRollingBalanceID *uint           `json:"grand_chapter_rolling_balance_id"`
 	Affiliations                 []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
-	CurrentPeriodID              *uint           `json:"current_period_id"`
-	CurrentPeriod                *Period         `json:"current_period"`
+	//TODO: Remove this
+	CurrentPeriodID *uint   `json:"current_period_id"`
+	CurrentPeriod   *Period `json:"current_period"`
 }
 
 func (c *Chapter) AddMovement(movement *Movement) {
@@ -129,5 +130,6 @@ func (c *Chapter) AffiliationOf(brother *Brother) *Affiliation {
 }
 
 func (c *Chapter) PeriodPendingInstallments(brother *Brother) []*Installment {
+	//TODO El valor de la cuota depende del capitulo
 	return c.CurrentPeriod.PendingInstallments(brother)
 }

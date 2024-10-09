@@ -17,7 +17,14 @@ Vue.component('treasury-app', {
         fetchTreasury() {
             // todo parametrize treasury id
             fetch('/treasury/1')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            this.$router.push('/');
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     this.movements = []
                     let Format = new Intl.NumberFormat('es-AR',
@@ -89,7 +96,14 @@ Vue.component('treasury-movement', {
     methods: {
         fetchTypes() {
             fetch('/manual-types')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            this.$router.push('/');
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     this.types = data;
                 });
@@ -100,7 +114,14 @@ Vue.component('treasury-movement', {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(this.movement)
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            this.$router.push('/');
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     this.$root.$emit('movement-created', data);
                     this.movement = { date: '', description: '', type: '', amount: 0, receipt: '' };

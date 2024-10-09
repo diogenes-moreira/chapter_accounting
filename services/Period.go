@@ -33,3 +33,13 @@ func UpdatePeriod(m *model.Period) error {
 	}
 	return nil
 }
+
+func GetCurrentPeriod() (*model.Period, error) {
+	var period model.Period
+	if err := model.DB.Model(&model.Period{
+		Current: true,
+	}).First(&period).Error; err != nil {
+		return nil, err
+	}
+	return &period, nil
+}

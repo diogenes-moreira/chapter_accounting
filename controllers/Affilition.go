@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-const affiliationPath = "/affiliations"
+const affiliationPath = "/api/affiliations"
 const affiliationPathId = affiliationPath + "/{id}"
 
 func RegisterAffiliationRoutesOn(r *mux.Router) {
-	r.HandleFunc(affiliationPath+"/view", GetAffiliationsView).Methods("GET")
+	r.HandleFunc("/affiliations/view", GetAffiliationsView).Methods("GET")
 	r.HandleFunc(affiliationPath, CreateAffiliation).Methods("POST")
 	r.HandleFunc(affiliationPath, GetAffiliations).Methods("GET")
 	r.HandleFunc(affiliationPathId, GetAffiliation).Methods("GET")
@@ -32,7 +32,7 @@ func GetAffiliationsView(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateAffiliations.Execute(w, View{Title: "Afiliaciones", Chapter: "1"})
+	err = templateAffiliations.Execute(w, View{Title: "Afiliaciones"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

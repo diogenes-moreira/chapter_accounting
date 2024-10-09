@@ -136,3 +136,7 @@ func (a *Affiliation) MarshalJSON() ([]byte, error) {
 		Overdue: a.NetBalance(),
 	})
 }
+
+func (a *Affiliation) IsCurrent() bool {
+	return a.Period.Current
+}

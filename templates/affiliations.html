@@ -16,20 +16,44 @@
 <body>
 <div class="container">
     {{template "navbar.html"}}
-    <div id="app" class="container mt-5">
-        <component
-                v-bind:is="currentComponent"
-        ></component>
-
-    </div>
+    <div id="app" class="container mt-5"></div>
 </div>
 
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
-<script src="/js/Affiliation.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<!-- Vue.js 3 CDN -->
+<script src="https://unpkg.com/vue@3.2.37/dist/vue.global.js"></script>
+
+<script type="module">
+    const { createApp, shallowRef } = Vue;
+    import Affiliations from '/js/Affiliation.js';
+    import Exaltation from "/js/Exaltation.js";
+
+    createApp(
+        {
+            setup() {
+                const CompA = Affiliations;
+                const CompB = Exaltation;
+                const current = shallowRef(CompA);
+                return { current, CompA, CompB };
+            },
+            template: `
+              <div class="demo">
+                <label><input type="radio" v-model="current" :value="CompA" /> A</label>
+                <label><input type="radio" v-model="current" :value="CompB" /> B</label>
+                <KeepAlive>
+                  <component :is="current"></component>
+                </KeepAlive>
+              </div>
+            `
+        }
+    ).mount('#app');
+</script>
+
+
 </body>
 </html>

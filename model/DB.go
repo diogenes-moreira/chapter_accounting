@@ -44,10 +44,12 @@ func AutoMigrate() {
 		&Period{},
 		&ChargeType{},
 		&Deposit{},
-		&MovementType{})
+		&MovementType{},
+		&User{})
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}
 
-	fmt.Println("Successfully connected to the database and migrated models")
+	InitChargeTypes()
+	InitMovementTypes()
 }

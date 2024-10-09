@@ -33,3 +33,27 @@ func UpdateBrother(m *model.Brother) error {
 	}
 	return nil
 }
+
+func CreateExaltation(brother *model.Brother, isHonorary bool) error {
+	if err := model.DB.Create(&brother).Error; err != nil {
+		return err
+	}
+	//TODO: Remove Hardcoded Chapter
+	chapter, err := GetChapter(1)
+	if err != nil {
+		return err
+	}
+	affiliation, err := CreateAffiliation(brother, chapter, isHonorary)
+	if err != nil {
+		return err
+	}
+	if !isHonorary {
+		charge, err := model.GetExaltationCharge()
+		if err != nil {
+			return err
+		}
+		affiliation.AddCharge(charge)
+	}
+
+	return nil
+}

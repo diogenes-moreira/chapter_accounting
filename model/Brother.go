@@ -12,7 +12,7 @@ type Brother struct {
 }
 
 func (b Brother) InstallmentAmount() float64 {
-	getMonthlyCharge := GetMonthlyCharge()
+	getMonthlyCharge, _ := GetMonthlyCharge()
 	if b.IsGrandChapterMember {
 		return getMonthlyCharge.GreatChapterAmount
 	}
@@ -20,6 +20,6 @@ func (b Brother) InstallmentAmount() float64 {
 }
 
 func (b Brother) GreatChapterAmount() float64 {
-	getMonthlyCharge := GetMonthlyCharge()
+	getMonthlyCharge, _ := GetMonthlyCharge()
 	return getMonthlyCharge.GreatChapterAmount
 }

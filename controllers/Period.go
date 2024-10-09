@@ -12,6 +12,7 @@ const periodPath = "/api/periods"
 const periodPathId = periodPath + "/{id}"
 
 func RegisterPeriodRoutesOn(r *mux.Router) {
+	r.HandleFunc(periodPath+"/current", GetCurrentPeriod).Methods("GET")
 	r.HandleFunc(periodPath, CreatePeriod).Methods("POST")
 	r.HandleFunc(periodPath, GetPeriods).Methods("GET")
 	r.HandleFunc(periodPathId, GetPeriod).Methods("GET")
@@ -52,4 +53,17 @@ func UpdatePeriod(writer http.ResponseWriter, request *http.Request) {
 
 func DeletePeriod(writer http.ResponseWriter, request *http.Request) {
 	//TODO Implement
+}
+
+func GetCurrentPeriod(writer http.ResponseWriter, request *http.Request) {
+	period, err := services.GetCurrentPeriod()
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(writer).Encode(period)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

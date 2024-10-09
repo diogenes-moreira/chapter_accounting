@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-const movementTypePath = "/movement-types"
+const movementTypePath = "/api/movement-types"
 const movementTypePathId = movementTypePath + "/{id}"
 
 func RegisterMovementTypeRoutesOn(r *mux.Router) {

@@ -17,9 +17,20 @@ WIP - Work in Progress
 
 ## Pending
 
+
+
+TODO: Create Exaltation
+TODO: Create Affiliation
+TODO: Create New Period
+TODO: Create Bag Income
+TODO: Create Brother Payment
+TODO: Create Brother Expense
+TODO: Create Movement Manual
+TODO: Create User
+TODO: Change Password
+TODO: Create Admin CRUDS
+TODO: Look & Feel
+TODO: Create Initialicer
 TODO: I18N  - Internationalization
 TODO: Multi-Currency
 TODO: Multi-Chapter (remove hardcode in front-end)
-TODO: Security
-TODO: Move to API Prefix
-
