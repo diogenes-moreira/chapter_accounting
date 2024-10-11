@@ -83,6 +83,13 @@ func GenerateToken(user *model.User) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
+func RefreshToken(claims *Claims) (string, error) {
+
+	return GenerateToken(&model.User{
+		UserName:  claims.Username,
+		ChapterID: &claims.ChapterId})
+}
+
 func ValidateToken(tknStr string) (*Claims, error) {
 	claims := &Claims{}
 	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {

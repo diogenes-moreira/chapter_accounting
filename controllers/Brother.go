@@ -34,12 +34,27 @@ func CreateExaltation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := services.CreateExaltation(exaltation.Brother, exaltation.IsHonorary)
+	chapterId, err := strconv.Atoi(r.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	chapter, err := services.GetChapter(uint(chapterId))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	err = services.CreateExaltation(exaltation.Brother, exaltation.IsHonorary, chapter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write([]byte(`{"status":"Exaltation created"}`))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func GetBrothersView(w http.ResponseWriter, r *http.Request) {

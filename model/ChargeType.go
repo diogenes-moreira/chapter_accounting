@@ -4,46 +4,50 @@ import "gorm.io/gorm"
 
 type ChargeType struct {
 	gorm.Model
-	Code               string  `json:"code" gorm:"unique"`
-	Name               string  `json:"name"`
-	Amount             float64 `json:"amount"`
-	GreatChapterAmount float64 `json:"great_chapter_amount"`
+	Code               string   `json:"code" gorm:"unique"`
+	Name               string   `json:"name"`
+	Amount             float64  `json:"amount"`
+	GreatChapterAmount float64  `json:"great_chapter_amount"`
+	ChapterID          *uint    `json:"chapter_id"`
+	Chapter            *Chapter `json:"-"`
 }
 
 const monthlyChargeCode = "monthly_charge"
 const exaltationChargeCode = "exaltation_charge"
 
-func GetMonthlyCharge() (*ChargeType, error) {
-	var charge ChargeType
-	err := DB.Where("code = ?", monthlyChargeCode).First(&charge).Error
-	if err != nil {
-		return nil, err
-	}
-	return &charge, nil
+func GetMonthlyCharge(chapter *Chapter) *ChargeType {
+	return GetChargeType(chapter, monthlyChargeCode)
 }
 
-func GetExaltationCharge() (*ChargeType, error) {
-	var charge ChargeType
-	err := DB.Where("code = ?", exaltationChargeCode).First(&charge).Error
-	if err != nil {
-		return nil, err
+func GetChargeType(chapter *Chapter, code string) *ChargeType {
+	for _, chargeType := range chapter.ChargeTypes {
+		if chargeType.Code == code {
+			return chargeType
+		}
 	}
-	return &charge, nil
+	return nil
+
 }
 
-func InitChargeTypes() {
-	monthlyCharge := ChargeType{
-		Code:               monthlyChargeCode,
-		Name:               "Monthly Charge",
-		Amount:             100.0,
-		GreatChapterAmount: 150.0,
+func GetExaltationCharge(chapter *Chapter) *ChargeType {
+	return GetChargeType(chapter, exaltationChargeCode)
+}
+
+func InitChargeTypes(chapter *Chapter) []*ChargeType {
+	return []*ChargeType{
+		{
+			Code:               monthlyChargeCode,
+			Name:               "Cuota Mensual",
+			Amount:             1000,
+			GreatChapterAmount: 100,
+			Chapter:            chapter,
+		},
+		{
+			Code:               exaltationChargeCode,
+			Name:               "Exaltación",
+			Amount:             5000,
+			GreatChapterAmount: 500,
+			Chapter:            chapter,
+		},
 	}
-	exaltationCharge := ChargeType{
-		Code:               exaltationChargeCode,
-		Name:               "Exaltation Charge",
-		Amount:             150.0,
-		GreatChapterAmount: 200.0,
-	}
-	DB.Create(&monthlyCharge)
-	DB.Create(&exaltationCharge)
 }

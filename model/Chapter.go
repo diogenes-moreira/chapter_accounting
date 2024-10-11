@@ -7,19 +7,24 @@ import (
 
 type Chapter struct {
 	gorm.Model
-	Name                         string          `json:"name"`
+	Name                         string          `json:"name" gorm:"unique"`
 	TreasurerRollingBalance      *RollingBalance `json:"treasurer_rolling_balance"`
 	TreasurerRollingBalanceID    *uint           `json:"treasurer_rolling_balance_id"`
 	GrandChapterRollingBalance   *RollingBalance `json:"grand_chapter_rolling_balance"`
 	GrandChapterRollingBalanceID *uint           `json:"grand_chapter_rolling_balance_id"`
 	Affiliations                 []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
-	//TODO: Remove this
-	CurrentPeriodID *uint   `json:"current_period_id"`
-	CurrentPeriod   *Period `json:"current_period"`
+	ChargeTypes                  []*ChargeType   `json:"charge_types" gorm:"foreignKey:ChapterID"`
 }
 
-func (c *Chapter) AddMovement(movement *Movement) {
-	c.TreasurerRollingBalance.AddMovement(movement)
+func (c *Chapter) AddMovement(movement *Movement) error {
+	cc, err := GetInstalmentCancellation()
+	if err != nil {
+		return err
+	}
+	if movement.MovementType.Code == cc.Code {
+		return nil
+	}
+	return c.TreasurerRollingBalance.AddMovement(movement)
 }
 
 func (c *Chapter) AddMovementTo(current float64, movement *Movement) float64 {
@@ -32,6 +37,7 @@ func (c *Chapter) AddMovementTo(current float64, movement *Movement) float64 {
 func (c *Chapter) Init() {
 	c.GrandChapterRollingBalance = &RollingBalance{}
 	c.TreasurerRollingBalance = &RollingBalance{}
+	c.ChargeTypes = InitChargeTypes(c)
 }
 
 func (c *Chapter) PendingInstallments() []*Installment {
@@ -129,7 +135,10 @@ func (c *Chapter) AffiliationOf(brother *Brother) *Affiliation {
 	return nil
 }
 
-func (c *Chapter) PeriodPendingInstallments(brother *Brother) []*Installment {
-	//TODO El valor de la cuota depende del capitulo
-	return c.CurrentPeriod.PendingInstallments(brother)
+func (c *Chapter) PeriodPendingInstallments(brother *Brother) ([]*Installment, error) {
+	period, err := GetCurrentPeriod()
+	if err != nil {
+		return nil, err
+	}
+	return period.PendingInstallments(brother, c)
 }

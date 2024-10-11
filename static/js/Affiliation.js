@@ -1,42 +1,21 @@
-const { ref, onMounted } = Vue;
+import BrotherMovements from "./BrotherMovements.js";
+
+const { ref, onMounted, inject } = Vue;
+
 
 export default {
-    setup() {
-        const affiliations = ref([]);
+    components: {BrotherMovements},
+    emits: ['changeComponent'],
+    expose:['fetchAffiliations'],
+    setup(props, { emit, expose })
+    {
+        const affiliations = inject('affiliations');
+        const fetchAffiliations = inject('fetchAffiliations');
+        const setAffiliation = inject('setAffiliation');
         const firstMonth = ref(1);
         const totalInstallments = ref(1);
-        const fetchAffiliations = () => {
-            fetch('/api/chapters/affiliations')
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            window.location.href = '/';
-                        }
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    affiliations.value = data;
-                    let Format = new Intl.NumberFormat('es-AR',
-                        { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 , currencySign: 'accounting' });
-                    affiliations.balance = Format.format(data.balance);
-                    for (let affiliation of affiliations.value) {
-                        affiliation.overdue = Format.format(affiliation.overdue);
-                        affiliation.balance = Format.format(affiliation.balance);
-                        affiliation.payedMonth = [];
-                        try {
-                            for (let installment of affiliation.installments) {
-                                if (installment.paid) {
-                                    if (installment.month != 0) {
-                                        affiliation.payedMonth.push(installment.month);
-                                    }
-                                }
-                            }
-                        }catch (e) {
-                            console.log(e);
-                        }
-                    }
-                });
+        const fetchPeriod = () => {
+
             fetch('/api/periods/current')
                 .then(response => {
                     if (!response.ok) {
@@ -65,13 +44,21 @@ export default {
             return "";
         };
         onMounted(() => {
+            fetchPeriod();
             fetchAffiliations();
         });
-        return { affiliations, firstMonth, totalInstallments, fetchAffiliations, letterMonth, notes };
+        return { affiliations, firstMonth, totalInstallments, fetchAffiliations, letterMonth, notes, fetchPeriod, setAffiliation };
         },
+    methods: {
+        toggle(name, affiliation) {
+            this.$emit("changeComponent",name, affiliation);
+        },
+
+    },
     template: `
         <div>
             <h2>Afiliaciones</h2>
+            <a @click="toggle('exaltation', null)" role="button" > <i class="bi bi-plus"></i> Exaltaci&oacute;n  </a>
             <table class="table table-bordered">
                 <thead>
                     <tr class="align-items-center">
@@ -80,6 +67,7 @@ export default {
                         <th>Deuda Vencida</th>
                         <th v-for="n in totalInstallments" >{{ letterMonth(n + firstMonth)}}</th>
                         <th>Saldo</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -89,12 +77,18 @@ export default {
                         <td class="text-end">{{ affiliation.overdue }}</td>
                         <td v-for="n in totalInstallments"  class="text-center">
                             <i v-if="affiliation.payedMonth.includes(n + firstMonth - 1)" class="bi bi-check-square-fill"></i>
-                            <i v-else class="bi bi-square"></i>
+                            <i v-else-if="affiliation.months.includes(n + firstMonth - 1)" class="bi bi-square"></i>
                         </td>
                         <td class="text-end">{{ affiliation.balance }}</td>
+                        <td>
+                          <a @click="setAffiliation(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal" ><i class="bi bi-receipt"></i></a>&nbsp;
+                          <a @click="toggle('brother_payment', affiliation)" role="button"><i class="bi bi-cash" ></i></a>&nbsp;
+                          <a @click="toggle('Movimientos')" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
+                        </td>
                     </tr>
                 </tbody>
             </table>
+            <BrotherMovements />
         </div>`,
 
 }

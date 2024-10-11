@@ -16,30 +16,38 @@ type Installment struct {
 	GrandChapterAmount float64      `json:"grand_chapter_amount"`
 	Paid               bool         `json:"paid"`
 	DepositID          *uint        `json:"deposit_id"` // Referencia opcional a un depósito
-	Deposit            *Deposit     `json:"deposit"`    // Puntero a la estructura Deposit
+	Deposit            *Deposit     `json:"-"`          // Puntero a la estructura Deposit
 	AffiliationID      uint         `json:"affiliation_id"`
-	Affiliation        *Affiliation `json:"affiliation"`
+	Affiliation        *Affiliation `json:"-"`
 }
 
-func (i *Installment) Apply() error {
-	if !i.Paid && i.Amount > i.Affiliation.Balance {
+func (i *Installment) Apply() (bool, error) {
+	if i.Paid {
+		return false, nil
+	}
+	if i.Amount <= i.Affiliation.Balance {
 		mt, err := GetInstalmentCancellation()
 		if err != nil {
-			return err
+			return false, err
 		}
 		i.Paid = true
-		i.Affiliation.AddMovement(
+		err = i.Affiliation.AddMovement(
 			&Movement{
 				MovementType: mt,
 				Amount:       i.Amount,
 				Description:  "Cancelación de " + i.Description,
 				Date:         time.Now()})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	} else {
+		return true, nil
 	}
-	return nil
 }
 
 func (i *Installment) IsDue() bool {
-	return time.Now().After(i.DueDate)
+	return time.Now().After(i.DueDate) && !i.Paid
 }
 
 func (i *Installment) Pending() bool {

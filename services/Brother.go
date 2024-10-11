@@ -34,13 +34,8 @@ func UpdateBrother(m *model.Brother) error {
 	return nil
 }
 
-func CreateExaltation(brother *model.Brother, isHonorary bool) error {
+func CreateExaltation(brother *model.Brother, isHonorary bool, chapter *model.Chapter) error {
 	if err := model.DB.Create(&brother).Error; err != nil {
-		return err
-	}
-	//TODO: Remove Hardcoded Chapter
-	chapter, err := GetChapter(1)
-	if err != nil {
 		return err
 	}
 	affiliation, err := CreateAffiliation(brother, chapter, isHonorary)
@@ -48,12 +43,11 @@ func CreateExaltation(brother *model.Brother, isHonorary bool) error {
 		return err
 	}
 	if !isHonorary {
-		charge, err := model.GetExaltationCharge()
-		if err != nil {
+		charge := model.GetExaltationCharge(chapter)
+		affiliation.AddCharge(charge)
+		if err := model.DB.Save(affiliation).Error; err != nil {
 			return err
 		}
-		affiliation.AddCharge(charge)
 	}
-
 	return nil
 }

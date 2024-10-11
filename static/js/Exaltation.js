@@ -1,15 +1,17 @@
 const { ref } = Vue;
 
 export default {
-    setup() {
+    setup(props, { emit }) {
         const firstName = ref('');
         const email = ref('');
         const phoneNumber = ref('');
         const lastNames = ref('');
         const isHonorary = ref(false);
-
+        const toggle = (name) => {
+            emit("changeComponent",name);
+        }
         const saveExaltation = () => {
-            fetch('/api/chapters/exaltation', {
+            fetch('/api/brothers/exaltation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -33,11 +35,12 @@ export default {
                     return response.json();
                 })
                 .then(data => {
+                    toggle('affiliations');
                     console.log(data);
                 });
         };
 
-        return { firstName, email, phoneNumber, lastNames, isHonorary, saveExaltation };
+        return { firstName, email, phoneNumber, lastNames, isHonorary, saveExaltation, toggle };
     },
     template: `
         <div>
@@ -47,6 +50,10 @@ export default {
                     <label for="firstName">First Name</label>
                     <input type="text" id="firstName" v-model="firstName" class="form-control" required>
                 </div>
+              <div class="form-group">
+                <label for="lastNames">Last Names</label>
+                <input type="text" id="lastNames" v-model="lastNames" class="form-control" required>
+              </div>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" v-model="email" class="form-control" required>
@@ -56,14 +63,11 @@ export default {
                     <input type="text" id="phoneNumber" v-model="phoneNumber" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="lastNames">Last Names</label>
-                    <input type="text" id="lastNames" v-model="lastNames" class="form-control" required>
-                </div>
-                <div class="form-group">
                     <label for="isHonorary">Is Honorary</label>
                     <input type="checkbox" id="isHonorary" v-model="isHonorary" class="form-check-input">
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" @click="toggle('affiliations')">Cancel</button>
             </form>
         </div>
     `,

@@ -9,25 +9,31 @@ import (
 type Affiliation struct {
 	gorm.Model
 	PeriodID         *uint          `json:"period_id"`
-	Period           *Period        `json:"period"`
+	Period           *Period        `json:"-"`
 	BrotherID        *uint          `json:"brother_id"`
 	Brother          *Brother       `json:"brother"`
 	ChapterID        *uint          `json:"chapter_id"`
-	Chapter          *Chapter       `json:"chapter"`
+	Chapter          *Chapter       `json:"-"`
 	Installments     []*Installment `json:"installments" gorm:"foreignKey:AffiliationID"`
 	StartDate        time.Time      `json:"start_date"`
 	EndDate          *time.Time     `json:"end_date"` // Puede ser nulo si la afiliación está activa
-	RollingBalance   RollingBalance `json:"rolling_balance"`
+	RollingBalance   RollingBalance `json:"-"`
 	RollingBalanceID uint           `json:"rolling_balance_id"`
 	Balance          float64        `json:"balance" gorm:"-"`
 	Honorary         bool           `json:"honorary"`
 }
 
-func (a *Affiliation) AddMovement(movement *Movement) {
-	a.Chapter.AddMovement(movement)
-	a.RollingBalance.AddMovement(movement)
+func (a *Affiliation) AddMovement(movement *Movement) error {
+	err := a.Chapter.AddMovement(movement)
+	if err != nil {
+		return err
+	}
+	err = a.RollingBalance.AddMovement(movement)
+	if err != nil {
+		return err
+	}
 	a.Balance = a.RollingBalance.Balance(a)
-	a.ApplyInstallments()
+	return a.ApplyInstallments()
 }
 
 func (a *Affiliation) AddMovementTo(current float64, movement *Movement) float64 {
@@ -39,9 +45,14 @@ func (a *Affiliation) AddMovementTo(current float64, movement *Movement) float64
 
 func (a *Affiliation) ApplyInstallments() error {
 	for _, installment := range a.Installments {
-		err := installment.Apply()
+		// this is for gorm not maintain a single instance of the relationship bilateral
+		installment.Affiliation = a
+		out, err := installment.Apply()
 		if err != nil {
 			return err
+		}
+		if out {
+			break
 		}
 	}
 	return nil
@@ -52,15 +63,14 @@ func (a *Affiliation) AddInstallment(installment *Installment) {
 	a.Installments = append(a.Installments, installment)
 }
 
-func (a *Affiliation) NetBalance() float64 {
-	a.Balance = a.RollingBalance.Balance(a)
+func (a *Affiliation) OverDue() float64 {
 	out := 0.0
 	for _, installment := range a.Installments {
-		if !installment.Paid && installment.IsDue() {
+		if installment.IsDue() {
 			out += installment.Amount
 		}
 	}
-	return out + a.Balance
+	return out
 }
 
 func (a *Affiliation) PendingInstallments() []*Installment {
@@ -113,13 +123,18 @@ func (a *Affiliation) AddCharge(charge *ChargeType) {
 	}
 }
 
-func (a *Affiliation) SetChapter(c *Chapter) {
+func (a *Affiliation) SetChapter(c *Chapter) error {
 	a.Chapter = c
+	installments, err := c.PeriodPendingInstallments(a.Brother)
+	if err != nil {
+		return err
+	}
 	if !a.Honorary {
-		for _, installment := range c.PeriodPendingInstallments(a.Brother) {
+		for _, installment := range installments {
 			a.AddInstallment(installment)
 		}
 	}
+	return nil
 }
 
 func (a *Affiliation) IsPeriod(p uint) bool {
@@ -128,12 +143,16 @@ func (a *Affiliation) IsPeriod(p uint) bool {
 
 func (a *Affiliation) MarshalJSON() ([]byte, error) {
 	type Alias Affiliation
+	a.RollingBalance.Adder = a
+	a.Balance = a.RollingBalance.Balance(a)
 	return json.Marshal(&struct {
 		*Alias
-		Overdue float64 `json:"overdue"`
+		Overdue   float64     `json:"overdue"`
+		Movements []*Movement `json:"movements"`
 	}{
-		Alias:   (*Alias)(a),
-		Overdue: a.NetBalance(),
+		Alias:     (*Alias)(a),
+		Overdue:   a.OverDue(),
+		Movements: a.RollingBalance.Movements,
 	})
 }
 

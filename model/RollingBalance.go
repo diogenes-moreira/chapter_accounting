@@ -21,8 +21,9 @@ func (b *RollingBalance) TotalOutcomes() float64 {
 	return out
 }
 
-func (b *RollingBalance) AddMovement(movement *Movement) {
+func (b *RollingBalance) AddMovement(movement *Movement) error {
 	b.Movements = append(b.Movements, movement)
+	return nil
 }
 
 func (b *RollingBalance) Balance(adder MovementAdder) float64 {
@@ -85,6 +86,6 @@ func (b *RollingBalance) MarshalJSON() ([]byte, error) {
 }
 
 type MovementAdder interface {
-	AddMovement(movement *Movement)
+	AddMovement(movement *Movement) error
 	AddMovementTo(current float64, movement *Movement) float64
 }

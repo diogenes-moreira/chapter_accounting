@@ -48,6 +48,9 @@ func GetMovementType(name string) (*MovementType, error) {
 }
 
 func InitMovementTypes() {
+	if (DB.Find(&MovementType{}).RowsAffected > 0) {
+		return
+	}
 	DB.Create(&MovementType{Code: _capitationPayment, Description: "Pago de cuota de capita", Expense: false,
 		Credit: true, Manual: false})
 	DB.Create(&MovementType{Code: _instalmentCancellation, Description: "Cancelación de cuota", Expense: false,

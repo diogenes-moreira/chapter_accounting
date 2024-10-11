@@ -13,12 +13,6 @@ import (
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-
-	// REMOVE IT
-	//if username == "admin" && password == "admin" {
-	//	services.CreateUser("admin", "admin")
-	//}
-
 	user := services.ValidateUser(username, password)
 	if user == nil {
 
@@ -27,26 +21,29 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
-
 	token, err := services.GenerateToken(user)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
+	http.SetCookie(w, cookieFrom(token))
+	http.Redirect(w, r, "/affiliations", http.StatusSeeOther)
+}
 
-	http.SetCookie(w, &http.Cookie{
+func cookieFrom(token string) *http.Cookie {
+	return &http.Cookie{
+		Path:    "/",
 		Name:    "token",
 		Value:   token,
 		Expires: time.Now().Add(10 * time.Minute),
-	})
-
-	// REMOVE IT get CHAPTER ID and current
-	http.Redirect(w, r, "/affiliations/view", http.StatusSeeOther)
+	}
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
+		Path:    "/",
 		Name:    "token",
 		Value:   "",
 		Expires: time.Now().Add(-10 * time.Minute)})
@@ -75,6 +72,12 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		r.Header.Set("chapter_id", strconv.Itoa(int(claim.ChapterId)))
+		tokenStr, err = services.RefreshToken(claim)
+		if err != nil {
+			http.Error(w, "Failed to refresh token", http.StatusInternalServerError)
+			return
+		}
+		http.SetCookie(w, cookieFrom(tokenStr))
 		next.ServeHTTP(w, r)
 	})
 }

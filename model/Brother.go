@@ -11,15 +11,15 @@ type Brother struct {
 	IsGrandChapterMember bool   `json:"is_grand_chapter"`
 }
 
-func (b Brother) InstallmentAmount() float64 {
-	getMonthlyCharge, _ := GetMonthlyCharge()
+func (b Brother) InstallmentAmount(chapter *Chapter) float64 {
+	getMonthlyCharge := GetMonthlyCharge(chapter)
+
 	if b.IsGrandChapterMember {
 		return getMonthlyCharge.GreatChapterAmount
 	}
 	return getMonthlyCharge.Amount
 }
 
-func (b Brother) GreatChapterAmount() float64 {
-	getMonthlyCharge, _ := GetMonthlyCharge()
-	return getMonthlyCharge.GreatChapterAmount
+func (b Brother) GreatChapterAmount(chapter *Chapter) float64 {
+	return GetMonthlyCharge(chapter).GreatChapterAmount
 }

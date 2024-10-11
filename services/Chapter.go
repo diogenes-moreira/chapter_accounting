@@ -2,6 +2,7 @@ package services
 
 import (
 	"argentina-tresury/model"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -25,8 +26,12 @@ func GetChapter(u uint) (*model.Chapter, error) {
 	var chapter model.Chapter
 	if err := model.DB.
 		Preload(`TreasurerRollingBalance`).
-		Preload(`TreasurerRollingBalance.Movements`).
-		Preload("TreasurerRollingBalance.Movements.MovementType").First(&chapter, u).Error; err != nil {
+		Preload(`TreasurerRollingBalance.Movements`, func(db *gorm.DB) *gorm.DB {
+			return db.Order("Movements.Date")
+		}).
+		Preload("TreasurerRollingBalance.Movements.MovementType").
+		Preload("ChargeTypes").
+		First(&chapter, u).Error; err != nil {
 		return nil, err
 	}
 	chapter.TreasurerRollingBalance.Adder = &chapter
@@ -39,6 +44,8 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 	if err := model.DB.Preload("Affiliations").
 		Preload("Affiliations.Brother").
 		Preload("Affiliations.RollingBalance").
+		Preload("Affiliations.RollingBalance.Movements").
+		Preload("Affiliations.RollingBalance.Movements.MovementType").
 		Preload("Affiliations.Installments").
 		Preload("Affiliations.Period").First(&chapter, u).Error; err != nil {
 		return nil, err
@@ -59,13 +66,21 @@ func UpdateChapter(m *model.Chapter) error {
 }
 
 func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorary bool) (*model.Affiliation, error) {
+	rollingBalance := model.RollingBalance{}
+	if err := model.DB.Create(&rollingBalance).Error; err != nil {
+		return nil, err
+	}
+	period, err := model.GetCurrentPeriod()
+	if err != nil {
+		return nil, err
+	}
 	affiliation := &model.Affiliation{
-		Period:         chapter.CurrentPeriod,
+		Period:         period,
 		Brother:        brother,
 		Installments:   []*model.Installment{},
 		StartDate:      time.Now(),
 		EndDate:        nil,
-		RollingBalance: model.RollingBalance{},
+		RollingBalance: rollingBalance,
 		Balance:        0,
 		Honorary:       isHonorary,
 	}
@@ -73,6 +88,12 @@ func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorar
 	if err := model.DB.Create(affiliation).Error; err != nil {
 		return nil, err
 	}
-	affiliation.SetChapter(chapter)
+	err = affiliation.SetChapter(chapter)
+	if err != nil {
+		return nil, err
+	}
+	if err := model.DB.Save(affiliation).Error; err != nil {
+		return nil, err
+	}
 	return affiliation, nil
 }
