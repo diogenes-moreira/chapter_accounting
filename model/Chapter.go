@@ -10,8 +10,8 @@ type Chapter struct {
 	Name                         string          `json:"name" gorm:"unique"`
 	TreasurerRollingBalance      *RollingBalance `json:"treasurer_rolling_balance"`
 	TreasurerRollingBalanceID    *uint           `json:"treasurer_rolling_balance_id"`
-	GrandChapterRollingBalance   *RollingBalance `json:"grand_chapter_rolling_balance"`
-	GrandChapterRollingBalanceID *uint           `json:"grand_chapter_rolling_balance_id"`
+	GreatChapterRollingBalance   *RollingBalance `json:"great_chapter_rolling_balance"`
+	GreatChapterRollingBalanceID *uint           `json:"great_chapter_rolling_balance_id"`
 	Affiliations                 []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
 	ChargeTypes                  []*ChargeType   `json:"charge_types" gorm:"foreignKey:ChapterID"`
 }
@@ -35,7 +35,7 @@ func (c *Chapter) AddMovementTo(current float64, movement *Movement) float64 {
 }
 
 func (c *Chapter) Init() {
-	c.GrandChapterRollingBalance = &RollingBalance{}
+	c.GreatChapterRollingBalance = &RollingBalance{}
 	c.TreasurerRollingBalance = &RollingBalance{}
 	c.ChargeTypes = InitChargeTypes(c)
 }
@@ -48,10 +48,10 @@ func (c *Chapter) PendingInstallments() []*Installment {
 	return out
 }
 
-func (c *Chapter) PendingGrandChapterAmount() float64 {
+func (c *Chapter) PendingGreatChapterAmount() float64 {
 	out := 0.0
 	for _, installment := range c.PendingInstallments() {
-		out += installment.GrandChapterAmount
+		out += installment.GreatChapterAmount
 	}
 	return out
 }
@@ -69,12 +69,12 @@ func (c *Chapter) AddDeposit(deposit *Deposit) error {
 	if err != nil {
 		return err
 	}
-	mg, err := deposit.GrandChapterMovement()
+	mg, err := deposit.GreatChapterMovement()
 	if err != nil {
 		return err
 	}
 	c.TreasurerRollingBalance.AddMovement(m)
-	c.GrandChapterRollingBalance.AddMovement(mg)
+	c.GreatChapterRollingBalance.AddMovement(mg)
 	return nil
 }
 
@@ -114,16 +114,13 @@ func (c *Chapter) AddBrotherMovement(brother *Brother, movement *Movement) {
 	}
 }
 
-func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64, movement *Movement) {
+func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64, movement *Movement) error {
 	amount = 0.0
 	for _, affiliation := range c.Affiliations {
 		amount += affiliation.UpdateInstallment(amount, greatChapterAmount)
 	}
-	c.GrandChapterRollingBalance.AddMovement(movement)
-}
+	return c.GreatChapterRollingBalance.AddMovement(movement)
 
-func (c *Chapter) GenerateGrandChapterMonthlyDebit(month uint) {
-	//TODO: Implement
 }
 
 func (c *Chapter) AffiliationOf(brother *Brother) *Affiliation {

@@ -24,7 +24,7 @@ func (p *Period) PendingInstallments(brother *Brother, chapter *Chapter) ([]*Ins
 				Year:               p.Year,
 				Month:              i,
 				Amount:             brother.InstallmentAmount(chapter),
-				GrandChapterAmount: brother.GreatChapterAmount(chapter),
+				GreatChapterAmount: brother.GreatChapterAmount(chapter),
 				Paid:               false,
 				OnTheSpot:          false,
 				//TODO: I18n

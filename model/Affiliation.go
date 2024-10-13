@@ -84,11 +84,11 @@ func (a *Affiliation) PendingInstallments() []*Installment {
 
 }
 
-func (a *Affiliation) GrandChapterAmountDueAt(month uint) float64 {
+func (a *Affiliation) GreatChapterAmountDueAt(month uint) float64 {
 	out := 0.0
 	for _, installment := range a.Installments {
 		if installment.DueAt(a.Period, month) {
-			out += installment.GrandChapterAmount
+			out += installment.GreatChapterAmount
 		}
 	}
 	return out
@@ -99,8 +99,8 @@ func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float
 	for _, installment := range a.Installments {
 		if !installment.Paid {
 			installment.Amount = amount
-			out += greatChapterAmount - installment.GrandChapterAmount
-			installment.GrandChapterAmount = greatChapterAmount
+			out += greatChapterAmount - installment.GreatChapterAmount
+			installment.GreatChapterAmount = greatChapterAmount
 		}
 	}
 	return out
@@ -117,7 +117,7 @@ func (a *Affiliation) AddCharge(charge *ChargeType) {
 			Description:        charge.Name,
 			Amount:             charge.Amount,
 			DueDate:            time.Now(),
-			GrandChapterAmount: charge.GreatChapterAmount,
+			GreatChapterAmount: charge.GreatChapterAmount,
 			Paid:               false,
 		})
 	}

@@ -14,6 +14,7 @@ type ChargeType struct {
 
 const monthlyChargeCode = "monthly_charge"
 const exaltationChargeCode = "exaltation_charge"
+const affiliationChargeCode = "affiliation_charge"
 
 func GetMonthlyCharge(chapter *Chapter) *ChargeType {
 	return GetChargeType(chapter, monthlyChargeCode)
@@ -33,6 +34,10 @@ func GetExaltationCharge(chapter *Chapter) *ChargeType {
 	return GetChargeType(chapter, exaltationChargeCode)
 }
 
+func GetAffiliationCharge(chapter *Chapter) *ChargeType {
+	return GetChargeType(chapter, affiliationChargeCode)
+}
+
 func InitChargeTypes(chapter *Chapter) []*ChargeType {
 	return []*ChargeType{
 		{
@@ -47,6 +52,13 @@ func InitChargeTypes(chapter *Chapter) []*ChargeType {
 			Name:               "Exaltación",
 			Amount:             5000,
 			GreatChapterAmount: 500,
+			Chapter:            chapter,
+		},
+		{
+			Code:               affiliationChargeCode,
+			Name:               "Afiliación",
+			Amount:             1000,
+			GreatChapterAmount: 100,
 			Chapter:            chapter,
 		},
 	}

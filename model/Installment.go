@@ -13,10 +13,10 @@ type Installment struct {
 	Description        string       `json:"description"`
 	Amount             float64      `json:"amount"`
 	DueDate            time.Time    `json:"due_date"`
-	GrandChapterAmount float64      `json:"grand_chapter_amount"`
+	GreatChapterAmount float64      `json:"great_chapter_amount"`
 	Paid               bool         `json:"paid"`
-	DepositID          *uint        `json:"deposit_id"` // Referencia opcional a un depósito
-	Deposit            *Deposit     `json:"-"`          // Puntero a la estructura Deposit
+	DepositID          *uint        `json:"deposit_id"`
+	Deposit            *Deposit     `json:"-"`
 	AffiliationID      uint         `json:"affiliation_id"`
 	Affiliation        *Affiliation `json:"-"`
 }

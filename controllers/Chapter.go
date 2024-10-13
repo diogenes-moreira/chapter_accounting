@@ -10,17 +10,42 @@ import (
 )
 
 const chapterPath = "/api/chapters"
-const chapterPathId = chapterPath + "/{id}"
+const chapterPathId = chapterPath + "/{id:[0-9]+}"
 
 func RegisterChapterRoutesOn(r *mux.Router) {
 	r.HandleFunc("/chapters", GetChaptersView).Methods("GET")
 	r.HandleFunc(chapterPath+"/treasury", GetTreasury).Methods("GET")
 	r.HandleFunc(chapterPath+"/affiliations", GetChaptersAffiliations).Methods("GET")
+	r.HandleFunc(chapterPath+"/movement", createChapterMovement).Methods("POST")
 	r.HandleFunc(chapterPath, CreateChapter).Methods("POST")
 	r.HandleFunc(chapterPath, GetChapters).Methods("GET")
 	r.HandleFunc(chapterPathId, GetChapter).Methods("GET")
 	r.HandleFunc(chapterPathId, UpdateChapter).Methods("PUT")
 	r.HandleFunc(chapterPathId, DeleteChapter).Methods("DELETE")
+}
+
+type ChapterMovement struct {
+	Amount      float64 `json:"amount"`
+	Date        ISODate `json:"date"`
+	Receipt     string  `json:"receipt"`
+	Type        string  `json:"type"`
+	Description string  `json:"description"`
+}
+
+func createChapterMovement(writer http.ResponseWriter, request *http.Request) {
+	movement := &ChapterMovement{}
+	if err := json.NewDecoder(request.Body).Decode(movement); err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(request.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = services.CreateChapterMovement(id, movement.Amount, movement.Receipt, movement.Date.Time, movement.Type,
+		movement.Description)
 }
 
 func GetTreasury(writer http.ResponseWriter, request *http.Request) {

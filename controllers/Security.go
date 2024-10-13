@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -121,7 +122,7 @@ func InitServer() {
 	RegisterPeriodRoutesOn(r)
 	RegisterTreasuryRoutesOn(r)
 
-	err := http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(os.Getenv("LISTENER"), r)
 	if err != nil {
 		return
 	}

@@ -36,7 +36,7 @@ func (d *Deposit) CreateMovement() (*Movement, error) {
 
 }
 
-func (d *Deposit) GrandChapterMovement() (*Movement, error) {
+func (d *Deposit) GreatChapterMovement() (*Movement, error) {
 	mt, err := GetGreatChapterDeposit()
 	if err != nil {
 		return nil, err

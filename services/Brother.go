@@ -51,3 +51,18 @@ func CreateExaltation(brother *model.Brother, isHonorary bool, chapter *model.Ch
 	}
 	return nil
 }
+
+func CreateBrotherAffiliation(brother *model.Brother, isHonorary bool, chapter *model.Chapter) error {
+	affiliation, err := CreateAffiliation(brother, chapter, isHonorary)
+	if err != nil {
+		return err
+	}
+	if !isHonorary {
+		charge := model.GetAffiliationCharge(chapter)
+		affiliation.AddCharge(charge)
+		if err := model.DB.Save(affiliation).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}

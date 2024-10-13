@@ -1,1 +1,0 @@
-// contemplar la opcion de descontar o pagar

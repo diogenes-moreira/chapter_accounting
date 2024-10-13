@@ -8,11 +8,12 @@ import (
 )
 
 const affiliationPath = "/api/affiliations"
-const affiliationPathId = affiliationPath + "/{id}"
+const affiliationPathId = affiliationPath + "/{id:[0-9]+}"
 
 func RegisterAffiliationRoutesOn(r *mux.Router) {
 	r.HandleFunc("/affiliations", GetAffiliationsView).Methods("GET")
 	r.HandleFunc(affiliationPath+"/payment", CreatePayment).Methods("POST")
+	r.HandleFunc(affiliationPath+"/expenses", CreateAffiliationExpense).Methods("POST")
 	r.HandleFunc(affiliationPath, CreateAffiliation).Methods("POST")
 	r.HandleFunc(affiliationPath, GetAffiliations).Methods("GET")
 	r.HandleFunc(affiliationPathId, GetAffiliation).Methods("GET")
@@ -28,6 +29,32 @@ type Payment struct {
 	AffiliationId uint    `json:"affiliation_id"`
 }
 
+type Expense struct {
+	Payment
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+func CreateAffiliationExpense(w http.ResponseWriter, r *http.Request) {
+	expense := &Expense{}
+	if err := json.NewDecoder(r.Body).Decode(expense); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err := services.CreateAffiliationExpense(expense.AffiliationId, expense.Amount, expense.Receipt, expense.Date.Time,
+		expense.Type, expense.Description)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write([]byte(`{ "status":"Expenses created" }`))
+	if err != nil {
+		return
+	}
+}
 func CreatePayment(w http.ResponseWriter, r *http.Request) {
 	payment := &Payment{}
 	if err := json.NewDecoder(r.Body).Decode(payment); err != nil {

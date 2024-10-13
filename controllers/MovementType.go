@@ -10,16 +10,28 @@ import (
 )
 
 const movementTypePath = "/api/movement-types"
-const movementTypePathId = movementTypePath + "/{id}"
+const movementTypePathId = movementTypePath + "/{id:[0-9]+}"
 
 func RegisterMovementTypeRoutesOn(r *mux.Router) {
 
 	r.HandleFunc(movementTypePath, CreateMovementType).Methods("POST")
 	r.HandleFunc(movementTypePath, GetMovementTypes).Methods("GET")
-	r.HandleFunc("/manual-types", GetManualTypes).Methods("GET")
+	r.HandleFunc(movementTypePath+"/manual-types", GetManualTypes).Methods("GET")
+	r.HandleFunc(movementTypePath+"/manual-expenses-types", GetManualExpensesTypes).Methods("GET")
 	r.HandleFunc(movementTypePathId, GetMovementType).Methods("GET")
 	r.HandleFunc(movementTypePathId, UpdateMovementType).Methods("PUT")
 	r.HandleFunc(movementTypePathId, DeleteMovementType).Methods("DELETE")
+}
+
+func GetManualExpensesTypes(writer http.ResponseWriter, request *http.Request) {
+	movementTypes, err := services.GetManualExpenseMovementTypes()
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+	err = json.NewEncoder(writer).Encode(movementTypes)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func GetManualTypes(writer http.ResponseWriter, request *http.Request) {

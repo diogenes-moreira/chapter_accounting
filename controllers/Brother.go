@@ -15,11 +15,53 @@ const brotherPathId = brotherPath + "/{id}"
 func RegisterBrotherRoutesOn(r *mux.Router) {
 	r.HandleFunc("/brothers/view", GetBrothersView).Methods("GET")
 	r.HandleFunc(brotherPath+"/exaltation", CreateExaltation).Methods("POST")
+	r.HandleFunc(brotherPath+"/affiliation", CreateBrotherAffiliation).Methods("POST")
 	r.HandleFunc(brotherPath, CreateBrother).Methods("POST")
 	r.HandleFunc(brotherPath, GetBrothers).Methods("GET")
 	r.HandleFunc(brotherPathId, GetBrother).Methods("GET")
 	r.HandleFunc(brotherPathId, UpdateBrother).Methods("PUT")
 	r.HandleFunc(brotherPathId, DeleteBrother).Methods("DELETE")
+}
+
+func CreateBrotherAffiliation(w http.ResponseWriter, r *http.Request) {
+	var exaltation Exaltation
+
+	if err := json.NewDecoder(r.Body).Decode(&exaltation); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	chapter, err := processChapter(w, r)
+	if err != nil {
+		return
+	}
+	err = services.CreateBrotherAffiliation(exaltation.Brother, exaltation.IsHonorary, chapter)
+	processCreation(w, err)
+}
+
+func processCreation(w http.ResponseWriter, err error) {
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write([]byte(`{"status":"ok"}`))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func processChapter(w http.ResponseWriter, r *http.Request) (*model.Chapter, error) {
+	chapterId, err := strconv.Atoi(r.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil, err
+	}
+	chapter, err := services.GetChapter(uint(chapterId))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, err
+	}
+	return chapter, nil
 }
 
 type Exaltation struct {
@@ -34,27 +76,12 @@ func CreateExaltation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	chapterId, err := strconv.Atoi(r.Header.Get("chapter_id"))
+	chapter, err := processChapter(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	chapter, err := services.GetChapter(uint(chapterId))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = services.CreateExaltation(exaltation.Brother, exaltation.IsHonorary, chapter)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write([]byte(`{"status":"Exaltation created"}`))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	processCreation(w, err)
 }
 
 func GetBrothersView(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,7 @@ const { shallowRef, provide, ref } = Vue;
 import Affiliations from '/js/Affiliation.js';
 import Exaltation from "/js/Exaltation.js";
 import BrotherPayment from "/js/BrotherPayment.js";
+import BrotherExpenses   from "./BrotherExpenses.js";
 
 export default {
         name: 'root-component',
@@ -9,6 +10,7 @@ export default {
             const current = shallowRef(Affiliations);
             const affiliation = ref({movements:[]});
             const affiliations = ref([]);
+            const exaltation = ref(false);
             const fetchAffiliations = () => {
                 fetch('/api/chapters/affiliations')
                     .then(response => {
@@ -50,7 +52,8 @@ export default {
             provide('affiliations', affiliations);
             provide('affiliation', affiliation);
             provide('setAffiliation',setAffiliation );
-            return { current, affiliation, affiliations, fetchAffiliations, setAffiliation };
+            provide('exaltation', exaltation);
+            return { current, affiliation, affiliations, exaltation, fetchAffiliations, setAffiliation };
         },
         components: {
             Affiliations,
@@ -58,23 +61,27 @@ export default {
             BrotherPayment,
         },
         methods: {
-            changeComponent(name, affiliation) {
+            changeComponent(name, param) {
                 if (name === 'affiliations') {
                     this.current = Affiliations;
                     this.fetchAffiliations();
                 } else if (name === 'exaltation') {
                     this.current = Exaltation;
+                    this.exaltation = param;
                 } else if (name === 'brother_payment') {
                     this.current = BrotherPayment;
-                    this.affiliation = affiliation;
-            }
+                    this.affiliation = param;
+                }else if (name === 'brother_expenses') {
+                    this.current = BrotherExpenses;
+                    this.affiliation = param;
+                }
         }}
     ,
         template: `
               <div class="demo">
                 <KeepAlive>
                   <component :is="current" 
-                             @change-component="(name, affiliation)=>{changeComponent(name,affiliation)}">
+                             @change-component="(name, aff)=>{changeComponent(name,aff)}">
                   </component>
                 </KeepAlive>
               </div>

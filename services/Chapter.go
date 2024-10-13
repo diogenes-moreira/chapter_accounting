@@ -44,7 +44,9 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 	if err := model.DB.Preload("Affiliations").
 		Preload("Affiliations.Brother").
 		Preload("Affiliations.RollingBalance").
-		Preload("Affiliations.RollingBalance.Movements").
+		Preload("Affiliations.RollingBalance.Movements", func(db *gorm.DB) *gorm.DB {
+			return db.Order("Movements.ID")
+		}).
 		Preload("Affiliations.RollingBalance.Movements.MovementType").
 		Preload("Affiliations.Installments").
 		Preload("Affiliations.Period").First(&chapter, u).Error; err != nil {
@@ -58,6 +60,25 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 	return out, nil
 }
 
+func CreateChapterMovement(chapter uint, amount float64, receipt string, date time.Time, typeMovement string,
+	description string) error {
+	mt, err := model.GetMovementType(typeMovement)
+	if err != nil {
+		return err
+	}
+	c, err := GetChapter(chapter)
+	if err != nil {
+		return err
+	}
+	movement := &model.Movement{
+		Amount:       amount,
+		Receipt:      receipt,
+		Date:         date,
+		Description:  description,
+		MovementType: mt,
+	}
+	return c.AddMovement(movement)
+}
 func UpdateChapter(m *model.Chapter) error {
 	if err := model.DB.Save(m).Error; err != nil {
 		return err

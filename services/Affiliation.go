@@ -47,3 +47,44 @@ func CreatePayment(affiliationId uint, amount float64, receipt string, date time
 	}
 	return model.DB.Save(affiliation).Error
 }
+
+func CreateAffiliationExpense(affiliationId uint, amount float64, receipt string, date time.Time,
+	expenseType string, description string) error {
+	affiliation, err := GetAffiliation(affiliationId)
+	if err != nil {
+		return err
+	}
+	mt, err := model.GetMovementType(expenseType)
+	if err != nil {
+		return err
+	}
+	mov := &model.Movement{
+		MovementType: mt,
+		Amount:       amount,
+		Receipt:      receipt,
+		Date:         date,
+		Description:  description,
+	}
+	err = affiliation.AddMovement(mov)
+	if err != nil {
+		return err
+	}
+	mt, err = model.GetCapitationPayment()
+	if err != nil {
+		return err
+	}
+	mov = &model.Movement{
+		MovementType: mt,
+		Amount:       amount,
+		Receipt:      receipt,
+		Date:         date,
+		Description:  "Pago de Hermano " + affiliation.Brother.FirstName + " " + affiliation.Brother.LastNames,
+	}
+	err = affiliation.Chapter.AddMovement(mov)
+
+	if err != nil {
+		return err
+	}
+
+	return model.DB.Save(affiliation).Error
+}

@@ -50,15 +50,16 @@ export default {
         return { affiliations, firstMonth, totalInstallments, fetchAffiliations, letterMonth, notes, fetchPeriod, setAffiliation };
         },
     methods: {
-        toggle(name, affiliation) {
-            this.$emit("changeComponent",name, affiliation);
+        toggle(name, param ) {
+            this.$emit("changeComponent",name, param);
         },
 
     },
     template: `
         <div>
             <h2>Afiliaciones</h2>
-            <a @click="toggle('exaltation', null)" role="button" > <i class="bi bi-plus"></i> Exaltaci&oacute;n  </a>
+            <a @click="toggle('exaltation', true)" role="button" ><i class="bi bi-plus"></i>Exaltaci&oacute;n</a>&nbsp;&nbsp;
+          <a @click="toggle('exaltation', false)" role="button" ><i class="bi bi-plus"></i>Afiliaci&oacute;n</a>
             <table class="table table-bordered">
                 <thead>
                     <tr class="align-items-center">
@@ -83,7 +84,7 @@ export default {
                         <td>
                           <a @click="setAffiliation(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal" ><i class="bi bi-receipt"></i></a>&nbsp;
                           <a @click="toggle('brother_payment', affiliation)" role="button"><i class="bi bi-cash" ></i></a>&nbsp;
-                          <a @click="toggle('Movimientos')" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
+                          <a @click="toggle('brother_expenses', affiliation)" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
                         </td>
                     </tr>
                 </tbody>

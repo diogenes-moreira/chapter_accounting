@@ -9,6 +9,10 @@ func CreateMovementType(movementType *model.MovementType) error {
 	return nil
 }
 
+func GetManualExpenseMovementTypes() ([]*model.MovementType, error) {
+	return model.GetManualExpenseMovementTypes()
+}
+
 func GetManualMovementTypes() ([]*model.MovementType, error) {
 	return model.GetManualMovementTypes()
 }

@@ -9,6 +9,9 @@ export default {
     methods: {
         dateFormated(date) {
             return new Date(date).toLocaleDateString();
+        },
+        isCredit(movement) {
+            return movement.movement_type.credit || movement.movement_type.expense ;
         }
     },
     template: `
@@ -36,9 +39,9 @@ export default {
                     <td>{{ dateFormated(movement.date) }}</td>
                     <td>{{ movement.description }}</td>
                     <td>{{ movement.movement_type.description }}</td>
-                    <td v-if="movement.movement_type.credit">{{ movement.amount }}</td>
+                    <td v-if="isCredit(movement)">{{ movement.amount }}</td>
                     <td v-else></td>
-                    <td v-if="!movement.movement_type.credit">{{ movement.amount }}</td>
+                    <td v-if="!isCredit(movement)">{{ movement.amount }}</td>
                     <td v-else></td>
                     <td>{{ movement.receipt }}</td>
                   </tr>

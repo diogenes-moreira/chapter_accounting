@@ -8,13 +8,13 @@ type Brother struct {
 	Email                string `json:"email"`
 	PhoneNumber          string `json:"phone_number"`
 	LastNames            string `json:"last_names"`
-	IsGrandChapterMember bool   `json:"is_grand_chapter"`
+	IsGreatChapterMember bool   `json:"is_great_chapter"`
 }
 
 func (b Brother) InstallmentAmount(chapter *Chapter) float64 {
 	getMonthlyCharge := GetMonthlyCharge(chapter)
 
-	if b.IsGrandChapterMember {
+	if b.IsGreatChapterMember {
 		return getMonthlyCharge.GreatChapterAmount
 	}
 	return getMonthlyCharge.Amount

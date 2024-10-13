@@ -1,4 +1,5 @@
 const { ref, onMounted } = Vue;
+import ManualMovements from "./ManualMovements.js";
 
 export default {
     setup() {
@@ -37,9 +38,9 @@ export default {
         });
         return { movements, balance, incomes, outcomes, fetchTreasury, movement, types };
     },
+    components: { ManualMovements },
     template: `<div>
             <h2>Tesoreria</h2>
-            <h3>Resumen</h3>
             <div class="row">
                 <div class="col">
                     <b>Ingresos</b>
@@ -54,6 +55,7 @@ export default {
                     <p>{{ balance }}</p>
                 </div>
             </div>
+            <a role="button" data-bs-toggle="modal" data-bs-target="#exampleModal"  ><i class="bi bi-plus"></i>Movimiento</a>&nbsp;&nbsp;
             <table class="table">
                 <thead>
                     <tr>
@@ -76,5 +78,6 @@ export default {
                         <td v-else></td>
                         <td>{{ movement.receipt }}</td>  
                     </tr>
-                </tbody></table></div>`
+                </tbody></table></div>
+    <ManualMovements />`
 };
