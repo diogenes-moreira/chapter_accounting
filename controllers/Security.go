@@ -64,6 +64,7 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 		}
 		tokenStr := c.Value
 		claim, err := services.ValidateToken(tokenStr)
+		r.Header.Set("user-name", claim.Username)
 		if err != nil {
 			if !isAPI {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -112,9 +113,11 @@ func InitServer() {
 	r.Use(ReuseBody)
 	RegisterIndex(r)
 	r.HandleFunc("/login", HandleLogin).Methods("POST")
-	r.HandleFunc("/logout", HandleLogout).Methods("GET")
 	r.Use(SecurityMiddleware)
 	RegisterIndex(r)
+	r.HandleFunc("/change-password", HandleChangePassword).Methods("POST")
+	r.HandleFunc("/change-password", ChangePasswordView).Methods("GET")
+	r.HandleFunc("/logout", HandleLogout).Methods("GET")
 	RegisterAffiliationRoutesOn(r)
 	RegisterBrotherRoutesOn(r)
 	RegisterChapterRoutesOn(r)
@@ -124,6 +127,29 @@ func InitServer() {
 
 	err := http.ListenAndServe(os.Getenv("LISTENER"), r)
 	if err != nil {
+		return
+	}
+}
+
+func HandleChangePassword(writer http.ResponseWriter, request *http.Request) {
+	user := request.Header.Get("user-name")
+	err := services.ChangePassword(user, request.FormValue("password"))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(writer, request, "/", http.StatusSeeOther)
+}
+
+func ChangePasswordView(w http.ResponseWriter, r *http.Request) {
+	template, err := parseTemplate("changePassword.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = template.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }

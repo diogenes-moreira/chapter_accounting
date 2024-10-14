@@ -65,10 +65,8 @@ func (a *Affiliation) AddInstallment(installment *Installment) {
 
 func (a *Affiliation) OverDue() float64 {
 	out := 0.0
-	for _, installment := range a.Installments {
-		if installment.IsDue() {
-			out += installment.Amount
-		}
+	for _, installment := range a.DueInstallments() {
+		out += installment.Amount
 	}
 	return out
 }
@@ -94,16 +92,13 @@ func (a *Affiliation) GreatChapterAmountDueAt(month uint) float64 {
 	return out
 }
 
-func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float64) float64 {
-	out := 0.0
+func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float64) {
 	for _, installment := range a.Installments {
 		if !installment.Paid {
 			installment.Amount = amount
-			out += greatChapterAmount - installment.GreatChapterAmount
 			installment.GreatChapterAmount = greatChapterAmount
 		}
 	}
-	return out
 }
 
 func (a *Affiliation) BrotherName() string {
@@ -158,4 +153,34 @@ func (a *Affiliation) MarshalJSON() ([]byte, error) {
 
 func (a *Affiliation) IsCurrent() bool {
 	return a.Period.Current
+}
+
+func (a *Affiliation) DueInstallments() []*Installment {
+	out := make([]*Installment, 0)
+	for _, installment := range a.Installments {
+		if installment.IsDue() {
+			out = append(out, installment)
+		}
+	}
+	return out
+}
+
+func (a *Affiliation) Deposits() []*Deposit {
+	out := make([]*Deposit, 0)
+	for _, installment := range a.Installments {
+		if installment.Deposit != nil {
+			out = append(out, installment.Deposit)
+		}
+	}
+	return out
+}
+
+func (a *Affiliation) OverDueGreatChapter() float64 {
+	out := 0.0
+	for _, installment := range a.DueInstallments() {
+		if installment.IsDue() {
+			out += installment.GreatChapterAmount
+		}
+	}
+	return out
 }

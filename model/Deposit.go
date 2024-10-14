@@ -15,10 +15,9 @@ type Deposit struct {
 
 func (d *Deposit) AddInstallments(installments []*Installment) {
 	for _, installment := range installments {
-		d.Amount += installment.Amount
+		d.Amount += installment.GreatChapterAmount
 		d.Installments = append(d.Installments, installment)
 		installment.Deposit = d
-
 	}
 }
 
@@ -33,7 +32,6 @@ func (d *Deposit) CreateMovement() (*Movement, error) {
 		Description:  "Depósito de en la Tesorería del Capítulo",
 		Date:         d.DepositDate,
 	}, nil
-
 }
 
 func (d *Deposit) GreatChapterMovement() (*Movement, error) {
@@ -48,4 +46,17 @@ func (d *Deposit) GreatChapterMovement() (*Movement, error) {
 		Description:  "Depósito de en la Tesorería del Gran Capítulo",
 		Date:         d.DepositDate,
 	}, nil
+}
+
+func (d *Deposit) In(out []*Deposit) bool {
+	if len(out) == 0 {
+		return false
+	} else {
+		for _, deposit := range out {
+			if deposit.ID == d.ID {
+				return true
+			}
+		}
+		return false
+	}
 }

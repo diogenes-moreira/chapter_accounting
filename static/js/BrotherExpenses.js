@@ -2,6 +2,7 @@ const { ref, inject, onMounted} = Vue;
 
 
 export default {
+    name: 'BrotherExpenses',
     setup(props, { emit, expose }) {
         const affiliation = inject('affiliation');
         const amount = ref('');
@@ -67,7 +68,7 @@ export default {
           </div>
           <div class="mb-3">
             <label for="type" class="form-label">Tipo</label>
-            <select id="type" v-model="type" class="form-control">
+            <select id="type" v-model="type" class="form-select">
                 <option v-for="type in types" :value="type.name">{{type.description}}</option>
             </select>
             </div>

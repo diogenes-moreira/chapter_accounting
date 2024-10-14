@@ -2,18 +2,15 @@ package model
 
 import (
 	"gorm.io/gorm"
-	"time"
 )
 
 type Chapter struct {
 	gorm.Model
-	Name                         string          `json:"name" gorm:"unique"`
-	TreasurerRollingBalance      *RollingBalance `json:"treasurer_rolling_balance"`
-	TreasurerRollingBalanceID    *uint           `json:"treasurer_rolling_balance_id"`
-	GreatChapterRollingBalance   *RollingBalance `json:"great_chapter_rolling_balance"`
-	GreatChapterRollingBalanceID *uint           `json:"great_chapter_rolling_balance_id"`
-	Affiliations                 []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
-	ChargeTypes                  []*ChargeType   `json:"charge_types" gorm:"foreignKey:ChapterID"`
+	Name                      string          `json:"name" gorm:"unique"`
+	TreasurerRollingBalance   *RollingBalance `json:"treasurer_rolling_balance"`
+	TreasurerRollingBalanceID *uint           `json:"treasurer_rolling_balance_id"`
+	Affiliations              []*Affiliation  `json:"affiliations" gorm:"foreignKey:ChapterID"`
+	ChargeTypes               []*ChargeType   `json:"charge_types" gorm:"foreignKey:ChapterID"`
 }
 
 func (c *Chapter) AddMovement(movement *Movement) error {
@@ -35,7 +32,6 @@ func (c *Chapter) AddMovementTo(current float64, movement *Movement) float64 {
 }
 
 func (c *Chapter) Init() {
-	c.GreatChapterRollingBalance = &RollingBalance{}
 	c.TreasurerRollingBalance = &RollingBalance{}
 	c.ChargeTypes = InitChargeTypes(c)
 }
@@ -43,7 +39,19 @@ func (c *Chapter) Init() {
 func (c *Chapter) PendingInstallments() []*Installment {
 	out := make([]*Installment, 0)
 	for _, affiliation := range c.Affiliations {
-		out = append(out, affiliation.PendingInstallments()...)
+		for _, installment := range affiliation.PendingInstallments() {
+			out = append(out, installment)
+		}
+	}
+	return out
+}
+
+func (c *Chapter) DueInstallments() []*Installment {
+	out := make([]*Installment, 0)
+	for _, affiliation := range c.Affiliations {
+		for _, installment := range affiliation.DueInstallments() {
+			out = append(out, installment)
+		}
 	}
 	return out
 }
@@ -69,67 +77,17 @@ func (c *Chapter) AddDeposit(deposit *Deposit) error {
 	if err != nil {
 		return err
 	}
-	mg, err := deposit.GreatChapterMovement()
+	err = c.TreasurerRollingBalance.AddMovement(m)
 	if err != nil {
 		return err
 	}
-	c.TreasurerRollingBalance.AddMovement(m)
-	c.GreatChapterRollingBalance.AddMovement(mg)
 	return nil
 }
 
-func (c *Chapter) AddExpenses(amount float64, date time.Time, expenseType *MovementType, description string) {
-	c.TreasurerRollingBalance.AddMovement(&Movement{
-		Amount:       amount,
-		MovementType: expenseType,
-		Description:  description,
-		Date:         date,
-	})
-
-}
-
-func (c *Chapter) AddBrotherExpense(amount float64, date time.Time, brother *Brother, expenseType *MovementType,
-	description string) {
-	affiliation := c.AffiliationOf(brother)
-	mov := Movement{
-		Amount:       amount,
-		MovementType: expenseType,
-		Description:  description + " pagado por Hermano" + brother.FirstName + " " + brother.LastNames,
-		Date:         date,
-	}
-	if affiliation != nil {
-		affiliation.AddMovement(&mov)
-	} else {
-		c.AddMovement(&mov)
-	}
-
-}
-
-func (c *Chapter) AddBrotherMovement(brother *Brother, movement *Movement) {
-	affiliation := c.AffiliationOf(brother)
-	if affiliation != nil {
-		affiliation.AddMovement(movement)
-	} else {
-		c.AddMovement(movement)
-	}
-}
-
-func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64, movement *Movement) error {
-	amount = 0.0
+func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64) {
 	for _, affiliation := range c.Affiliations {
-		amount += affiliation.UpdateInstallment(amount, greatChapterAmount)
+		affiliation.UpdateInstallment(amount, greatChapterAmount)
 	}
-	return c.GreatChapterRollingBalance.AddMovement(movement)
-
-}
-
-func (c *Chapter) AffiliationOf(brother *Brother) *Affiliation {
-	for _, affiliation := range c.Affiliations {
-		if *affiliation.BrotherID == brother.ID {
-			return affiliation
-		}
-	}
-	return nil
 }
 
 func (c *Chapter) PeriodPendingInstallments(brother *Brother) ([]*Installment, error) {
@@ -138,4 +96,36 @@ func (c *Chapter) PeriodPendingInstallments(brother *Brother) ([]*Installment, e
 		return nil, err
 	}
 	return period.PendingInstallments(brother, c)
+}
+
+func (c *Chapter) DueGreatChapterAmount() float64 {
+	out := 0.0
+	for _, affiliation := range c.Affiliations {
+		out += affiliation.OverDueGreatChapter()
+	}
+	return out
+}
+
+func (c *Chapter) Deposits() []*Deposit {
+	out := make([]*Deposit, 0)
+	for _, affiliation := range c.Affiliations {
+		for _, deposit := range affiliation.Deposits() {
+			if !deposit.In(out) {
+				out = append(out, deposit)
+			}
+		}
+	}
+	return out
+}
+
+func (c *Chapter) TotalDeposits() float64 {
+	out := 0.0
+	for _, deposit := range c.Deposits() {
+		out += deposit.Amount
+	}
+	return out
+}
+
+func (c *Chapter) Balance() float64 {
+	return c.TotalDeposits() - c.PendingGreatChapterAmount() - c.DueGreatChapterAmount()
 }

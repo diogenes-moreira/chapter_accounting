@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"gorm.io/gorm"
 	"time"
 )
@@ -14,9 +15,10 @@ type Installment struct {
 	Amount             float64      `json:"amount"`
 	DueDate            time.Time    `json:"due_date"`
 	GreatChapterAmount float64      `json:"great_chapter_amount"`
+	PaidDate           time.Time    `json:"paid_date"`
 	Paid               bool         `json:"paid"`
 	DepositID          *uint        `json:"deposit_id"`
-	Deposit            *Deposit     `json:"-"`
+	Deposit            *Deposit     `json:"deposit"`
 	AffiliationID      uint         `json:"affiliation_id"`
 	Affiliation        *Affiliation `json:"-"`
 }
@@ -31,6 +33,7 @@ func (i *Installment) Apply() (bool, error) {
 			return false, err
 		}
 		i.Paid = true
+		i.PaidDate = time.Now()
 		err = i.Affiliation.AddMovement(
 			&Movement{
 				MovementType: mt,
@@ -56,4 +59,15 @@ func (i *Installment) Pending() bool {
 
 func (i *Installment) DueAt(period *Period, month uint) bool {
 	return i.Month == int(month) && i.Year == period.Year
+}
+
+func (i *Installment) MarshalJSON() ([]byte, error) {
+	type Alias Installment
+	return json.Marshal(&struct {
+		*Alias
+		Brother string `json:"brother"`
+	}{
+		Alias:   (*Alias)(i),
+		Brother: i.Affiliation.BrotherName(),
+	})
 }

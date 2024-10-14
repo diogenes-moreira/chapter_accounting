@@ -25,6 +25,14 @@ func GetChapters() ([]model.Chapter, error) {
 func GetChapter(u uint) (*model.Chapter, error) {
 	var chapter model.Chapter
 	if err := model.DB.
+		Preload("Affiliations").
+		Preload("Affiliations.Brother").
+		Preload("Affiliations.Installments").
+		Preload("Affiliations.Installments.Affiliation").
+		Preload("Affiliations.Installments.Affiliation.Brother").
+		Preload("Affiliations.Installments.Deposit").
+		Preload("Affiliations.Installments.Deposit.Installments").
+		Preload("Affiliations.Installments.Deposit.Installments.Affiliation.Brother").
 		Preload(`TreasurerRollingBalance`).
 		Preload(`TreasurerRollingBalance.Movements`, func(db *gorm.DB) *gorm.DB {
 			return db.Order("Movements.Date")
@@ -49,6 +57,9 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 		}).
 		Preload("Affiliations.RollingBalance.Movements.MovementType").
 		Preload("Affiliations.Installments").
+		Preload("Affiliations.Installments.Deposit").
+		Preload("Affiliations.Installments.Affiliation").
+		Preload("Affiliations.Installments.Affiliation.Brother").
 		Preload("Affiliations.Period").First(&chapter, u).Error; err != nil {
 		return nil, err
 	}
@@ -77,7 +88,11 @@ func CreateChapterMovement(chapter uint, amount float64, receipt string, date ti
 		Description:  description,
 		MovementType: mt,
 	}
-	return c.AddMovement(movement)
+	err = c.AddMovement(movement)
+	if err != nil {
+		return err
+	}
+	return model.DB.Save(c).Error
 }
 func UpdateChapter(m *model.Chapter) error {
 	if err := model.DB.Save(m).Error; err != nil {
@@ -117,4 +132,76 @@ func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorar
 		return nil, err
 	}
 	return affiliation, nil
+}
+
+type GreatChapterStatus struct {
+	PendingInstallments []*model.Installment `json:"pending_installments"`
+	PendingAmount       float64              `json:"pending_amount"`
+	DueInstallments     []*model.Installment `json:"due_installments"`
+	Deposits            []*model.Deposit     `json:"deposits"`
+	TotalDeposits       float64              `json:"total_deposits"`
+	DueAmount           float64              `json:"due_amount"`
+	Balance             float64              `json:"balance"`
+}
+
+func CreateDeposit(chapterId uint, installmentsId []uint64) error {
+	chapter, err := GetChapter(chapterId)
+	var installments []*model.Installment
+	if err != nil {
+		return err
+	}
+	for _, installmentId := range installmentsId {
+		i := &model.Installment{}
+		err := model.DB.First(i, installmentId).Error
+		if err != nil {
+			return err
+		}
+		installments = append(installments, i)
+	}
+	deposit := &model.Deposit{
+		Amount:       0,
+		Installments: []*model.Installment{},
+		DepositDate:  time.Now(),
+	}
+	deposit.AddInstallments(installments)
+	err = model.DB.Create(deposit).Error
+	if err != nil {
+		return err
+	}
+	movement, err := deposit.CreateMovement()
+	if err != nil {
+		return err
+	}
+	err = chapter.AddMovement(movement)
+	if err != nil {
+		return err
+	}
+	err = model.DB.Save(chapter).Error
+	for _, installment := range installments {
+		err = model.DB.Save(installment).Error
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetGreatChapterStatus(chapterId uint) (*GreatChapterStatus, error) {
+	chapter, err := GetChapter(chapterId)
+	if err != nil {
+		return nil, err
+	}
+	if chapter == nil {
+		return nil, nil
+	}
+	gcs := &GreatChapterStatus{
+		PendingInstallments: chapter.PendingInstallments(),
+		PendingAmount:       chapter.PendingGreatChapterAmount(),
+		DueInstallments:     chapter.DueInstallments(),
+		DueAmount:           chapter.DueGreatChapterAmount(),
+		Deposits:            chapter.Deposits(),
+		TotalDeposits:       chapter.TotalDeposits(),
+		Balance:             chapter.Balance(),
+	}
+	return gcs, nil
 }

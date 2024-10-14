@@ -16,18 +16,16 @@ WIP - Work in Progress
 
 ## Pending
 
-
-TODO_ refactor User With Profile
-TODO: Create New Period
-TODO: Create Movement Manual
+TODO: Rename Brother to Companion
+TODO: Change Password
 TODO: Create Update Installment
-TODO_ Create Great Chapter Pending View
+TODO: Create New Period
 TODO: Partner View 
 TODO: Affiliation cancel.. hay que dar de baja  los installments
 TODO: Create User
-TODO: Change Password
 TODO: Create Admin CRUDS
 TODO: Look & Feel
+TODO_ refactor User With Profile, direct access to profile
 TODO: Create Initialicer
 TODO: I18N  - Internationalization
 TODO: File Upload For Receipts
@@ -35,3 +33,4 @@ TODO: limit package scope for controllers
 TODO: Multi-Currency
 TODO: Multi-Chapter (remove hardcode in front-end)
 TODO: Create Installment Manual
+TODO: Deposit Manual Date

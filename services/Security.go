@@ -104,3 +104,11 @@ func ValidateToken(tknStr string) (*Claims, error) {
 	}
 	return claims, nil
 }
+
+func ChangePassword(username string, password string) error {
+	hashedPassword := HashAndSalt([]byte(password))
+	if err := model.DB.Model(&model.User{}).Where("user_name = ?", username).Update("password", hashedPassword).Error; err != nil {
+		return err
+	}
+	return nil
+}

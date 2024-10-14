@@ -14,6 +14,21 @@ export default {
         const setAffiliation = inject('setAffiliation');
         const firstMonth = ref(1);
         const totalInstallments = ref(1);
+        const deposits = ref([]);
+        const showDetail = (movement) => {
+            deposits.value = [];
+            let Format = new Intl.NumberFormat('es-AR',
+                { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 , currencySign: 'accounting' });
+            let installments = movement.installments.filter(installment => installment.deposit != null);
+            for ( let installment of installments){
+                let deposit = {};
+                deposit.date = new Date(installment.deposit.deposit_date).toLocaleDateString();
+                deposit.amount = Format.format(installment.deposit.amount);
+                deposit.description = installment.description;
+                deposits.value.push(deposit);
+            }
+
+        }
         const fetchPeriod = () => {
 
             fetch('/api/periods/current')
@@ -47,7 +62,16 @@ export default {
             fetchPeriod();
             fetchAffiliations();
         });
-        return { affiliations, firstMonth, totalInstallments, fetchAffiliations, letterMonth, notes, fetchPeriod, setAffiliation };
+        return { affiliations,
+            firstMonth,
+            totalInstallments,
+            deposits,
+            fetchAffiliations,
+            letterMonth,
+            notes,
+            fetchPeriod,
+            setAffiliation,
+            showDetail };
         },
     methods: {
         toggle(name, param ) {
@@ -83,6 +107,7 @@ export default {
                         <td class="text-end">{{ affiliation.balance }}</td>
                         <td>
                           <a @click="setAffiliation(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal" ><i class="bi bi-receipt"></i></a>&nbsp;
+                          <a @click="showDetail(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#detailDeposit" ><i class="bi bi-bank"></i></a>&nbsp; 
                           <a @click="toggle('brother_payment', affiliation)" role="button"><i class="bi bi-cash" ></i></a>&nbsp;
                           <a @click="toggle('brother_expenses', affiliation)" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
                         </td>
@@ -90,8 +115,38 @@ export default {
                 </tbody>
             </table>
             <BrotherMovements />
+            <div class="modal fade" id="detailDeposit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <p class="modal-title" id="exampleModalLabel">Depositos</p>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Recibo</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="movement in deposits">
+                                    <td>{{ movement.date }}</td>
+                                    <td>{{ movement.description }}</td>
+                                    <td>{{ movement.amount }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                      <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                      </div>
+                    </div>
+                </div>
+              </div>
         </div>`,
 
 }
 
-// This is the Affiliation component that is used in the Affiliation.vue file.

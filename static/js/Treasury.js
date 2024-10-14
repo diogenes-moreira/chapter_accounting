@@ -1,4 +1,4 @@
-const { ref, onMounted } = Vue;
+const { ref, provide, onMounted } = Vue;
 import ManualMovements from "./ManualMovements.js";
 
 export default {
@@ -31,12 +31,12 @@ export default {
                     }
                 });
         };
-        const movement = ref({ date: '', description: '', type: '', amount: 0, receipt: '' });
-        const types = ref([]);
         onMounted(() => {
             fetchTreasury();
         });
-        return { movements, balance, incomes, outcomes, fetchTreasury, movement, types };
+        provide('fetchTreasury', fetchTreasury);
+
+        return { movements, balance, incomes, outcomes, fetchTreasury };
     },
     components: { ManualMovements },
     template: `<div>
@@ -79,5 +79,5 @@ export default {
                         <td>{{ movement.receipt }}</td>  
                     </tr>
                 </tbody></table></div>
-    <ManualMovements />`
+    <ManualMovements  @refresh="fetchTreasury"/>`
 };

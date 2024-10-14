@@ -1,9 +1,9 @@
-const { ref, onMounted} = Vue;
-
+const { ref, inject, onMounted} = Vue;
 
 export default {
     name: 'ManualMovements',
-    setup(props, { emit, expose }) {
+    setup(props, { emit }) {
+        const fetchTreasury = inject('fetchTreasury');
         const amount = ref('');
         const date = ref('');
         const receipt = ref('');
@@ -34,6 +34,7 @@ export default {
                 })
                 .then(data => {
                     console.log(data);
+                    fetchTreasury();
                 });
         }
         onMounted(() => {
@@ -50,13 +51,10 @@ export default {
                     types.value = data;
                 });
         })
-        const toggle = (name) => {
-            emit("changeComponent",name);
-        }
-        return {  amount, date, receipt, description, saveMovement, toggle, type, types };
+        return {  amount, date, receipt, description, saveMovement, type, types };
     },
     template: `
-      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal fade" id="exampleModal"  data-bs-backdrop="static" data-bs-keyboard="false"  tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
           <div class="modal-content">
             <div class="modal-header">
@@ -67,7 +65,7 @@ export default {
               <form @submit.prevent="saveMovement">
                 <div class="mb-3">
                   <label for="type" class="form-label">Tipo</label>
-                  <select id="type" v-model="type" class="form-control">
+                  <select id="type" v-model="type" class="form-select">
                     <option v-for="type in types" :value="type.name">{{ type.description }}</option>
                   </select>
                 </div>
@@ -95,7 +93,7 @@ export default {
             </div>
             <div class="modal-footer">
             <div class="mb-3">
-              <button type="button" @click="saveMovement" class="btn btn-primary">Save</button>&nbsp;
+              <button type="button" @click="saveMovement" class="btn btn-primary" data-bs-dismiss="modal">Save</button>&nbsp;
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
           </div>

@@ -14,14 +14,76 @@ const chapterPathId = chapterPath + "/{id:[0-9]+}"
 
 func RegisterChapterRoutesOn(r *mux.Router) {
 	r.HandleFunc("/chapters", GetChaptersView).Methods("GET")
+	r.HandleFunc("/great-chapter", getGreatChapterView).Methods("GET")
 	r.HandleFunc(chapterPath+"/treasury", GetTreasury).Methods("GET")
 	r.HandleFunc(chapterPath+"/affiliations", GetChaptersAffiliations).Methods("GET")
 	r.HandleFunc(chapterPath+"/movement", createChapterMovement).Methods("POST")
+	r.HandleFunc(chapterPath+"/great-chapter", getGreatChapterStatus).Methods("GET")
+	r.HandleFunc(chapterPath+"/deposit", createDeposit).Methods("POST")
 	r.HandleFunc(chapterPath, CreateChapter).Methods("POST")
 	r.HandleFunc(chapterPath, GetChapters).Methods("GET")
 	r.HandleFunc(chapterPathId, GetChapter).Methods("GET")
 	r.HandleFunc(chapterPathId, UpdateChapter).Methods("PUT")
 	r.HandleFunc(chapterPathId, DeleteChapter).Methods("DELETE")
+}
+
+type Deposit struct {
+	Installments []uint64 `json:"installments"`
+}
+
+func createDeposit(writer http.ResponseWriter, request *http.Request) {
+	deposit := &Deposit{}
+	if err := json.NewDecoder(request.Body).Decode(deposit); err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(request.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = services.CreateDeposit(uint(id), deposit.Installments)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writer.WriteHeader(http.StatusCreated)
+	_, err = writer.Write([]byte(`{ "status":"Deposit created" }`))
+}
+
+func getGreatChapterStatus(writer http.ResponseWriter, request *http.Request) {
+	id, err := strconv.Atoi(request.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	chapter, err := services.GetGreatChapterStatus(uint(id))
+	if chapter == nil {
+		http.Error(writer, "Chapter not found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(writer).Encode(chapter)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func getGreatChapterView(writer http.ResponseWriter, request *http.Request) {
+	templateGreatChapter, err := parseTemplate("greatChapter.html")
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = templateGreatChapter.Execute(writer, nil)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 type ChapterMovement struct {
@@ -44,8 +106,14 @@ func createChapterMovement(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = services.CreateChapterMovement(id, movement.Amount, movement.Receipt, movement.Date.Time, movement.Type,
+	err = services.CreateChapterMovement(uint(id), movement.Amount, movement.Receipt, movement.Date.Time, movement.Type,
 		movement.Description)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writer.WriteHeader(http.StatusCreated)
+	_, err = writer.Write([]byte(`{ "status":"Movement created" }`))
 }
 
 func GetTreasury(writer http.ResponseWriter, request *http.Request) {
