@@ -11,9 +11,9 @@ const affiliationPath = "/api/affiliations"
 const affiliationPathId = affiliationPath + "/{id:[0-9]+}"
 
 func RegisterAffiliationRoutesOn(r *mux.Router) {
-	r.HandleFunc("/affiliations", GetAffiliationsView).Methods("GET")
-	r.HandleFunc(affiliationPath+"/payment", CreatePayment).Methods("POST")
-	r.HandleFunc(affiliationPath+"/expenses", CreateAffiliationExpense).Methods("POST")
+	r.HandleFunc("/affiliations", getAffiliationsView).Methods("GET")
+	r.HandleFunc(affiliationPath+"/payment", createPayment).Methods("POST")
+	r.HandleFunc(affiliationPath+"/expenses", createAffiliationExpense).Methods("POST")
 	r.HandleFunc(affiliationPath, CreateAffiliation).Methods("POST")
 	r.HandleFunc(affiliationPath, GetAffiliations).Methods("GET")
 	r.HandleFunc(affiliationPathId, GetAffiliation).Methods("GET")
@@ -35,7 +35,7 @@ type Expense struct {
 	Description string `json:"description"`
 }
 
-func CreateAffiliationExpense(w http.ResponseWriter, r *http.Request) {
+func createAffiliationExpense(w http.ResponseWriter, r *http.Request) {
 	expense := &Expense{}
 	if err := json.NewDecoder(r.Body).Decode(expense); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -55,7 +55,7 @@ func CreateAffiliationExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func CreatePayment(w http.ResponseWriter, r *http.Request) {
+func createPayment(w http.ResponseWriter, r *http.Request) {
 	payment := &Payment{}
 	if err := json.NewDecoder(r.Body).Decode(payment); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -82,13 +82,13 @@ func UpdateAffiliation(writer http.ResponseWriter, request *http.Request) {
 	// TODO: Implement
 }
 
-func GetAffiliationsView(w http.ResponseWriter, r *http.Request) {
+func getAffiliationsView(w http.ResponseWriter, r *http.Request) {
 	templateAffiliations, err := parseTemplate("affiliations.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateAffiliations.Execute(w, View{Title: "Afiliaciones"})
+	err = executeTemplate(w, r, templateAffiliations, &View{Title: "Afiliaciones"})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

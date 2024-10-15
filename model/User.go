@@ -6,7 +6,15 @@ type User struct {
 	gorm.Model
 	UserName  string   `json:"user_name" gorm:"unique"`
 	Password  string   `json:"password"`
-	IsAdmin   bool     `json:"is_admin"`
-	Chapter   *Chapter `json:"chapter"`
+	Chapter   *Chapter `json:"-"`
 	ChapterID *uint    `json:"chapter_id"`
+	Profile   string   `json:"profile"`
+}
+
+func (u User) IsAdmin() bool {
+	return u.Profile == "admin"
+}
+
+func (u User) IsTreasurer() bool {
+	return u.Profile == "treasurer"
 }

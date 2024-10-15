@@ -9,24 +9,29 @@ import (
 	"strconv"
 )
 
-const brotherPath = "/api/brothers"
-const brotherPathId = brotherPath + "/{id}"
+const companionPath = "/api/companions"
+const companionPathId = companionPath + "/{id}"
 
-func RegisterBrotherRoutesOn(r *mux.Router) {
-	r.HandleFunc("/brothers/view", GetBrothersView).Methods("GET")
-	r.HandleFunc(brotherPath+"/exaltation", CreateExaltation).Methods("POST")
-	r.HandleFunc(brotherPath+"/affiliation", CreateBrotherAffiliation).Methods("POST")
-	r.HandleFunc(brotherPath, CreateBrother).Methods("POST")
-	r.HandleFunc(brotherPath, GetBrothers).Methods("GET")
-	r.HandleFunc(brotherPathId, GetBrother).Methods("GET")
-	r.HandleFunc(brotherPathId, UpdateBrother).Methods("PUT")
-	r.HandleFunc(brotherPathId, DeleteBrother).Methods("DELETE")
+func RegisterCompanionRoutesOn(r *mux.Router) {
+	r.HandleFunc("/companions/view", getCompanionsView).Methods("GET")
+	r.HandleFunc(companionPath+"/exaltation", createExaltation).Methods("POST")
+	r.HandleFunc(companionPath+"/affiliation", createCompanionAffiliation).Methods("POST")
+	r.HandleFunc(companionPath, createCompanion).Methods("POST")
+	r.HandleFunc(companionPath, getCompanions).Methods("GET")
+	r.HandleFunc(companionPathId, getCompanion).Methods("GET")
+	r.HandleFunc(companionPathId, updateCompanion).Methods("PUT")
+	r.HandleFunc(companionPathId, deleteCompanion).Methods("DELETE")
 }
 
-func CreateBrotherAffiliation(w http.ResponseWriter, r *http.Request) {
-	var exaltation Exaltation
+type exaltation struct {
+	Companion  *model.Companion `json:"companion"`
+	IsHonorary bool             `json:"is_honorary"`
+}
 
-	if err := json.NewDecoder(r.Body).Decode(&exaltation); err != nil {
+func createCompanionAffiliation(w http.ResponseWriter, r *http.Request) {
+	var e exaltation
+
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -34,7 +39,7 @@ func CreateBrotherAffiliation(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	err = services.CreateBrotherAffiliation(exaltation.Brother, exaltation.IsHonorary, chapter)
+	err = services.CreateCompanionAffiliation(e.Companion, e.IsHonorary, chapter)
 	processCreation(w, err)
 }
 
@@ -64,15 +69,10 @@ func processChapter(w http.ResponseWriter, r *http.Request) (*model.Chapter, err
 	return chapter, nil
 }
 
-type Exaltation struct {
-	Brother    *model.Brother `json:"brother"`
-	IsHonorary bool           `json:"is_honorary"`
-}
+func createExaltation(w http.ResponseWriter, r *http.Request) {
+	var e exaltation
 
-func CreateExaltation(w http.ResponseWriter, r *http.Request) {
-	var exaltation Exaltation
-
-	if err := json.NewDecoder(r.Body).Decode(&exaltation); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -80,111 +80,111 @@ func CreateExaltation(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	err = services.CreateExaltation(exaltation.Brother, exaltation.IsHonorary, chapter)
+	err = services.CreateExaltation(e.Companion, e.IsHonorary, chapter)
 	processCreation(w, err)
 }
 
-func GetBrothersView(w http.ResponseWriter, r *http.Request) {
-	templateBrothers, err := parseTemplate("brothers.html")
+func getCompanionsView(w http.ResponseWriter, r *http.Request) {
+	templateCompanions, err := parseTemplate("companions.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateBrothers.Execute(w, nil)
+	err = executeTemplate(w, r, templateCompanions, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// CreateBrother creates a new brother
-func CreateBrother(w http.ResponseWriter, r *http.Request) {
-	var brother model.Brother
-	if err := json.NewDecoder(r.Body).Decode(&brother); err != nil {
+// createCompanion creates a new companion
+func createCompanion(w http.ResponseWriter, r *http.Request) {
+	var companion model.Companion
+	if err := json.NewDecoder(r.Body).Decode(&companion); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := services.CreateBrother(&brother)
+	err := services.CreateCompanion(&companion)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(w).Encode(brother)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-// GetBrothers returns all brothers
-func GetBrothers(w http.ResponseWriter, r *http.Request) {
-	brothers, err := services.GetBrothers()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(brothers)
+	err = json.NewEncoder(w).Encode(companion)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// GetBrother returns a brother by id
-func GetBrother(w http.ResponseWriter, r *http.Request) {
+// getCompanions returns all companions
+func getCompanions(w http.ResponseWriter, r *http.Request) {
+	companions, err := services.GetCompanions()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(companions)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// getCompanion returns a companion by id
+func getCompanion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	brother, err := services.GetBrother(uint(id))
+	companion, err := services.GetCompanion(uint(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = json.NewEncoder(w).Encode(brother)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-// UpdateBrother updates a brother by id
-func UpdateBrother(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var brother model.Brother
-	if err := json.NewDecoder(r.Body).Decode(&brother); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	brother.ID = uint(id)
-	err = services.UpdateBrother(&brother)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(brother)
+	err = json.NewEncoder(w).Encode(companion)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// DeleteBrother deletes a brother by id
-func DeleteBrother(w http.ResponseWriter, r *http.Request) {
+// updateCompanion updates a companion by id
+func updateCompanion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = model.DB.Delete(&model.Brother{}, id).Error
+	var companion model.Companion
+	if err := json.NewDecoder(r.Body).Decode(&companion); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	companion.ID = uint(id)
+	err = services.UpdateCompanion(&companion)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(companion)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// deleteCompanion deletes a companion by id
+func deleteCompanion(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = model.DB.Delete(&model.Companion{}, id).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

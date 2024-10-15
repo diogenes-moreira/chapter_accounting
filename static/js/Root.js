@@ -1,8 +1,8 @@
 const { shallowRef, provide, ref } = Vue;
 import Affiliations from '/js/Affiliation.js';
 import Exaltation from "/js/Exaltation.js";
-import BrotherPayment from "/js/BrotherPayment.js";
-import BrotherExpenses   from "./BrotherExpenses.js";
+import CompanionPayment from "/js/CompanionPayment.js";
+import CompanionExpenses   from "./CompanionExpenses.js";
 
 export default {
         name: 'root-component',
@@ -58,7 +58,7 @@ export default {
         components: {
             Affiliations,
             Exaltation,
-            BrotherPayment,
+            CompanionPayment,
         },
         methods: {
             changeComponent(name, param) {
@@ -68,11 +68,11 @@ export default {
                 } else if (name === 'exaltation') {
                     this.current = Exaltation;
                     this.exaltation = param;
-                } else if (name === 'brother_payment') {
-                    this.current = BrotherPayment;
+                } else if (name === 'companion_payment') {
+                    this.current = CompanionPayment;
                     this.affiliation = param;
-                }else if (name === 'brother_expenses') {
-                    this.current = BrotherExpenses;
+                }else if (name === 'companion_expenses') {
+                    this.current = CompanionExpenses;
                     this.affiliation = param;
                 }
         }}

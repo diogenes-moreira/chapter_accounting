@@ -65,7 +65,7 @@ func (c *Chapter) PendingGreatChapterAmount() float64 {
 }
 
 // AddAffiliation adds a new affiliation to the chapter and sets the charge
-// of the brother in the chapter.For exaltation, the charge is ExaltationCharge.
+// of the companion in the chapter.For exaltation, the charge is ExaltationCharge.
 func (c *Chapter) AddAffiliation(affiliation *Affiliation, charge *ChargeType) {
 	c.Affiliations = append(c.Affiliations, affiliation)
 	affiliation.SetChapter(c)
@@ -90,12 +90,12 @@ func (c *Chapter) UpdateInstallment(amount float64, greatChapterAmount float64) 
 	}
 }
 
-func (c *Chapter) PeriodPendingInstallments(brother *Brother) ([]*Installment, error) {
+func (c *Chapter) PeriodPendingInstallments(companion *Companion) ([]*Installment, error) {
 	period, err := GetCurrentPeriod()
 	if err != nil {
 		return nil, err
 	}
-	return period.PendingInstallments(brother, c)
+	return period.PendingInstallments(companion, c)
 }
 
 func (c *Chapter) DueGreatChapterAmount() float64 {
@@ -127,5 +127,23 @@ func (c *Chapter) TotalDeposits() float64 {
 }
 
 func (c *Chapter) Balance() float64 {
-	return c.TotalDeposits() - c.PendingGreatChapterAmount() - c.DueGreatChapterAmount()
+	return c.AdvancePaymentAmount() - c.PendingGreatChapterAmount() - c.DueGreatChapterAmount()
+}
+
+func (c *Chapter) UpdateInstallments(amount float64, greatChapterAmount float64, typeId uint) error {
+	for _, affiliation := range c.Affiliations {
+		err := affiliation.UpdateInstallments(amount, greatChapterAmount, typeId)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Chapter) AdvancePaymentAmount() float64 {
+	out := 0.0
+	for _, deposit := range c.Deposits() {
+		out += deposit.AdvancePaymentAmount()
+	}
+	return out
 }

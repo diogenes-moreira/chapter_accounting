@@ -1,7 +1,7 @@
 const {  inject } = Vue;
 
 export default {
-    name: 'BrotherMovements',
+    name: 'CompanionMovements',
     setup(props) {
         const affiliation = inject('affiliation');
         return { affiliation };

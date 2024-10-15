@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/base64"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -38,7 +39,7 @@ func AutoMigrate() {
 	// AutoMigrate your models
 	err = DB.AutoMigrate(
 		&Movement{},
-		&Brother{},
+		&Companion{},
 		&RollingBalance{},
 		&Chapter{},
 		&Affiliation{},
@@ -85,6 +86,7 @@ func InitUsers(chapter *Chapter) {
 		UserName: "admin",
 		Password: hashedPassword,
 		Chapter:  chapter,
+		Profile:  "admin",
 	}).Error; err != nil {
 		log.Printf("failed to create user: %v", err)
 	}
@@ -111,5 +113,5 @@ func HashAndSalt(pwd []byte) string {
 	}
 	// GenerateFromPassword returns a byte slice so we need to
 	// convert the bytes to a string and return it
-	return string(hash)
+	return base64.StdEncoding.EncodeToString(hash)
 }

@@ -7,7 +7,7 @@ export default {
         const amount = ref('');
         const date = ref('');
         const receipt = ref('');
-        const saveBrotherPayment = () => {
+        const saveCompanionPayment = () => {
             fetch('/api/affiliations/payment', {
                 method: 'POST',
                 headers: {
@@ -36,15 +36,15 @@ export default {
         const toggle = (name) => {
             emit("changeComponent",name);
         }
-        return {  amount, date, receipt, saveBrotherPayment, toggle, affiliation };
+        return {  amount, date, receipt, saveCompanionPayment, toggle, affiliation };
         },
     template: `
       <div>
-        <h1>Brother Payment</h1>
-        <form @submit.prevent="saveBrotherPayment">
+        <h1>Companion Payment</h1>
+        <form @submit.prevent="saveCompanionPayment">
           <div class="mb-3">
-            <p>Brother Name</p>
-            <p>{{ affiliation.brother.first_name }} {{ affiliation.brother.last_names}}</p>
+            <p>Companion Name</p>
+            <p>{{ affiliation.companion.first_name }} {{ affiliation.companion.last_names}}</p>
           </div>
           <div class="mb-3">
             <label for="amount" class="form-label">Amount</label>

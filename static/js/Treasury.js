@@ -39,6 +39,11 @@ export default {
         return { movements, balance, incomes, outcomes, fetchTreasury };
     },
     components: { ManualMovements },
+    methods: {
+        readOnly:  () => {
+            return window.readOnly;
+        }
+    },
     template: `<div>
             <h2>Tesoreria</h2>
             <div class="row">
@@ -55,7 +60,7 @@ export default {
                     <p>{{ balance }}</p>
                 </div>
             </div>
-            <a role="button" data-bs-toggle="modal" data-bs-target="#exampleModal"  ><i class="bi bi-plus"></i>Movimiento</a>&nbsp;&nbsp;
+            <a v-if="!readOnly()" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal"  ><i class="bi bi-plus"></i>Movimiento</a>&nbsp;&nbsp;
             <table class="table">
                 <thead>
                     <tr>

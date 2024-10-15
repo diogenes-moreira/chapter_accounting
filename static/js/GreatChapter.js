@@ -10,6 +10,55 @@ export default {
         const dueAmount = ref(0);
         const totalDeposits = ref(0);
         const installments = ref([]);
+        const amount = ref(0);
+        const amountGreatChapter = ref(0);
+        const types = ref([]);
+        const type = ref({});
+        const fetchTypes = () => {
+            fetch('/api/charge-types')
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = '/';
+                        }
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    types.value = data;
+                });
+        }
+        const updateInstallmentValue = () => {
+            if (amount.value === 0 || amountGreatChapter.value === 0) {
+                alert('Debe ingresar un monto');
+                return;
+            }
+            if (!confirm('¿Desea actualizar el monto de las cuotas?')) {
+                return;
+            }
+            fetch('/api/chapters/update-installment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: amount.value,
+                    great_chapter_amount: amountGreatChapter.value,
+                    type_id: type.value
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = '/';
+                        }
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    fetchGreatChapter();
+                });
+        }
         let Format = new Intl.NumberFormat('es-AR',
             {style: 'currency', currency: 'ARS', minimumFractionDigits: 2, currencySign: 'accounting'});
         const showDetail = (movement) => {
@@ -56,6 +105,7 @@ export default {
         };
         onMounted(() => {
             fetchGreatChapter();
+            fetchTypes();
         });
         provide('fetchGreatChapter', fetchGreatChapter);
         const generateDeposit = () => {
@@ -63,7 +113,7 @@ export default {
             let ids = selected.map(installment => installment.ID);
             if (ids.length === 0) {
                 alert('Debe seleccionar al menos una cuota');
-                return;
+                return false;
             }
            if(!confirm('¿Desea generar un deposito con las cuotas seleccionadas?')){
                return;
@@ -99,10 +149,29 @@ export default {
             deposits,
             totalDeposits,
             installments,
+            amount,
+            amountGreatChapter,
+            types,
+            type,
+            updateInstallmentValue,
             fetchGreatChapter,
             generateDeposit,
             showDetail
         };
+    },
+    methods: {
+        setValue() {
+            for (let type of this.types) {
+                if (type.ID === this.type) {
+                    this.amount = type.amount;
+                    this.amountGreatChapter = type.great_chapter_amount;
+                    return;
+                }
+            }
+        },
+        readOnly() {
+            return window.readOnly
+        }
     },
     template: `
       <div>
@@ -117,7 +186,7 @@ export default {
             <p>{{ balance }}</p>
           </div>
         </div>
-        <a role="button" @click="generateDeposit"><i class="bi bi-plus"></i>Generar Deposito</a>&nbsp;&nbsp;
+        <a v-if="!readOnly()" role="button" @click="generateDeposit"><i class="bi bi-plus"></i>Generar Deposito</a>&nbsp;&nbsp;
         <table class="table">
           <thead>
           <tr>
@@ -131,7 +200,7 @@ export default {
           <tr v-for="movement in pendingInstallments">
             <td><input type="checkbox" v-model="movement.selected" /></td>
             <td>{{ movement.date }}</td>
-            <td>{{ movement.description }} - {{ movement.brother }}</td>
+            <td>{{ movement.description }} - {{ movement.companion }}</td>
             <td>{{ movement.great_chapter_amount }}</td>
           </tr>
           </tbody>
@@ -142,6 +211,7 @@ export default {
             <p>{{ dueAmount }}</p>
           </div>
         </div>
+        <a v-if="!readOnly()" role="button" data-bs-target="#installModal" data-bs-toggle="modal"><i class="bi bi-pencil"></i>Actualiza Valor de Cuota</a>&nbsp;&nbsp;
         <table class="table">
           <thead>
           <tr>
@@ -153,7 +223,7 @@ export default {
           <tbody>
           <tr v-for="movement in dueInstallments">
             <td>{{ movement.date }}</td>
-            <td>{{ movement.description }} - {{ movement.brother }}</td>
+            <td>{{ movement.description }} - {{ movement.companion }}</td>
             <td>{{ movement.great_chapter_amount }}</td>
           </tr>
           </tbody>
@@ -180,6 +250,40 @@ export default {
           </tr>
           </tbody>
         </table>
+        <div class="modal fade" id="installModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Actualizaci&oacute;n de Cuotas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Tipo Charge</label>
+                        <select id="type" v-model="type" class="form-control form-select" @change="setValue">
+                          <option v-for="type in types" :value="type.ID" :key="type.ID">{{ type.name }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Monto Capita</label>
+                        <input type="number" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" id="amount"  v-model="amount" />
+                    </div>
+                  <div class="mb-3">
+                    <label for="amount" class="form-label">Monto Gran Capitulo</label>
+                    <input type="number" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency" id="amountGreatChapter"  v-model="amountGreatChapter" />
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <div class="mb-3">
+                  <button type="button" @click="updateInstallmentValue" class="btn btn-primary" data-bs-dismiss="modal">Save</button>&nbsp;
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -199,7 +303,7 @@ export default {
                     <tbody>
                     <tr v-for="installment in installments">
                         <td>{{ installment.date }}</td>
-                        <td>{{ installment.description }} - {{ installment.brother }}</td>
+                        <td>{{ installment.description }} - {{ installment.companion }}</td>
                         <td>{{ installment.great_chapter_amount }}</td>
                     </tr>
                     </tbody>

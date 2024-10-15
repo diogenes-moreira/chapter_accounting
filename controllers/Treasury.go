@@ -19,7 +19,7 @@ func RenderView(w http.ResponseWriter, request *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = template.Execute(w, nil)
+	err = executeTemplate(w, request, template, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

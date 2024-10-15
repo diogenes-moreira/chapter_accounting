@@ -9,5 +9,5 @@ drop table if exists deposits;
 drop table if exists movements;
 drop table if exists movement_types;
 drop table if exists periods;
-drop table if exists brothers;
+drop table if exists companions;
 

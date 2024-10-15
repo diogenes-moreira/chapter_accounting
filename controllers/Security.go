@@ -11,12 +11,41 @@ import (
 	"time"
 )
 
+func InitServer() {
+	r := mux.NewRouter()
+	InitView(r)
+	r.Use(ReuseBody)
+	RegisterIndex(r)
+	r.HandleFunc("/login", HandleLogin).Methods("POST")
+	r.Use(SecurityMiddleware)
+	RegisterIndex(r)
+	r.HandleFunc("/change-password", HandleChangePassword).Methods("POST")
+	r.HandleFunc("/change-password", ChangePasswordView).Methods("GET")
+	//TODO: Remove this
+	r.HandleFunc("/reset-password", func(writer http.ResponseWriter, request *http.Request) {
+		_ = services.ChangePassword("admin", "password")
+		writer.WriteHeader(http.StatusOK)
+	}).Methods("GET")
+	r.HandleFunc("/logout", HandleLogout).Methods("GET")
+	RegisterUserRoutesOn(r)
+	RegisterAffiliationRoutesOn(r)
+	RegisterCompanionRoutesOn(r)
+	RegisterChapterRoutesOn(r)
+	RegisterMovementTypeRoutesOn(r)
+	RegisterPeriodRoutesOn(r)
+	RegisterTreasuryRoutesOn(r)
+	RegisterChargeTypesOn(r)
+	err := http.ListenAndServe(os.Getenv("LISTENER"), r)
+	if err != nil {
+		return
+	}
+}
+
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	user := services.ValidateUser(username, password)
 	if user == nil {
-
 		if strings.Contains(r.URL.Path, "api") {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
@@ -65,6 +94,7 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 		tokenStr := c.Value
 		claim, err := services.ValidateToken(tokenStr)
 		r.Header.Set("user-name", claim.Username)
+		r.Header.Set("profile", claim.Profile)
 		if err != nil {
 			if !isAPI {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -104,31 +134,9 @@ func extractCookie(w http.ResponseWriter, r *http.Request, isAPI bool) (*http.Co
 func isPublicPath(r *http.Request) bool {
 	return r.URL.Path == "/login" ||
 		r.URL.Path == "/logout" ||
+		//TODO: Remove this
+		r.URL.Path == "/reset-password" ||
 		r.URL.Path == "/" || strings.Contains(r.URL.Path, "/js/") || strings.Contains(r.URL.Path, "/css/")
-}
-
-func InitServer() {
-	r := mux.NewRouter()
-	InitView(r)
-	r.Use(ReuseBody)
-	RegisterIndex(r)
-	r.HandleFunc("/login", HandleLogin).Methods("POST")
-	r.Use(SecurityMiddleware)
-	RegisterIndex(r)
-	r.HandleFunc("/change-password", HandleChangePassword).Methods("POST")
-	r.HandleFunc("/change-password", ChangePasswordView).Methods("GET")
-	r.HandleFunc("/logout", HandleLogout).Methods("GET")
-	RegisterAffiliationRoutesOn(r)
-	RegisterBrotherRoutesOn(r)
-	RegisterChapterRoutesOn(r)
-	RegisterMovementTypeRoutesOn(r)
-	RegisterPeriodRoutesOn(r)
-	RegisterTreasuryRoutesOn(r)
-
-	err := http.ListenAndServe(os.Getenv("LISTENER"), r)
-	if err != nil {
-		return
-	}
 }
 
 func HandleChangePassword(writer http.ResponseWriter, request *http.Request) {
@@ -147,7 +155,7 @@ func ChangePasswordView(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = template.Execute(w, nil)
+	err = executeTemplate(w, r, template, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

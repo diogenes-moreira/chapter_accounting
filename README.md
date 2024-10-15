@@ -16,16 +16,13 @@ WIP - Work in Progress
 
 ## Pending
 
-TODO: Rename Brother to Companion
-TODO: Change Password
-TODO: Create Update Installment
+TODO: Principal Only View - BackEnd
 TODO: Create New Period
-TODO: Partner View 
+TODO: Companion View 
 TODO: Affiliation cancel.. hay que dar de baja  los installments
-TODO: Create User
 TODO: Create Admin CRUDS
 TODO: Look & Feel
-TODO_ refactor User With Profile, direct access to profile
+TODO: direct access to profile
 TODO: Create Initialicer
 TODO: I18N  - Internationalization
 TODO: File Upload For Receipts

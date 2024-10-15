@@ -18,7 +18,7 @@ func GetAffiliation(id uint) (*model.Affiliation, error) {
 		Preload("Installments", func(db *gorm.DB) *gorm.DB {
 			return db.Order("Installments.DUE_DATE")
 		}).
-		Preload("Brother").
+		Preload("Companion").
 		First(affiliation, id).Error; err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func CreatePayment(affiliationId uint, amount float64, receipt string, date time
 		Amount:       amount,
 		Receipt:      receipt,
 		Date:         date,
-		Description:  "Pago de Hermano " + affiliation.Brother.FirstName + " " + affiliation.Brother.LastNames,
+		Description:  "Pago de Hermano " + affiliation.Companion.FirstName + " " + affiliation.Companion.LastNames,
 	}
 	err = affiliation.AddMovement(mov)
 	if err != nil {
@@ -78,7 +78,7 @@ func CreateAffiliationExpense(affiliationId uint, amount float64, receipt string
 		Amount:       amount,
 		Receipt:      receipt,
 		Date:         date,
-		Description:  "Pago de Hermano " + affiliation.Brother.FirstName + " " + affiliation.Brother.LastNames,
+		Description:  "Pago de Hermano " + affiliation.Companion.FirstName + " " + affiliation.Companion.LastNames,
 	}
 	err = affiliation.Chapter.AddMovement(mov)
 

@@ -21,6 +21,8 @@ type Installment struct {
 	Deposit            *Deposit     `json:"deposit"`
 	AffiliationID      uint         `json:"affiliation_id"`
 	Affiliation        *Affiliation `json:"-"`
+	ChargeTypeID       uint         `json:"charge_type_id"`
+	ChargeType         *ChargeType  `json:"-"`
 }
 
 func (i *Installment) Apply() (bool, error) {
@@ -65,9 +67,13 @@ func (i *Installment) MarshalJSON() ([]byte, error) {
 	type Alias Installment
 	return json.Marshal(&struct {
 		*Alias
-		Brother string `json:"brother"`
+		Companion string `json:"companion"`
 	}{
-		Alias:   (*Alias)(i),
-		Brother: i.Affiliation.BrotherName(),
+		Alias:     (*Alias)(i),
+		Companion: i.Affiliation.CompanionName(),
 	})
+}
+
+func (i *Installment) InAdvance() bool {
+	return i.DueDate.After(time.Now())
 }

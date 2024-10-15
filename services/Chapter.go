@@ -26,13 +26,13 @@ func GetChapter(u uint) (*model.Chapter, error) {
 	var chapter model.Chapter
 	if err := model.DB.
 		Preload("Affiliations").
-		Preload("Affiliations.Brother").
+		Preload("Affiliations.Companion").
 		Preload("Affiliations.Installments").
 		Preload("Affiliations.Installments.Affiliation").
-		Preload("Affiliations.Installments.Affiliation.Brother").
+		Preload("Affiliations.Installments.Affiliation.Companion").
 		Preload("Affiliations.Installments.Deposit").
 		Preload("Affiliations.Installments.Deposit.Installments").
-		Preload("Affiliations.Installments.Deposit.Installments.Affiliation.Brother").
+		Preload("Affiliations.Installments.Deposit.Installments.Affiliation.Companion").
 		Preload(`TreasurerRollingBalance`).
 		Preload(`TreasurerRollingBalance.Movements`, func(db *gorm.DB) *gorm.DB {
 			return db.Order("Movements.Date")
@@ -50,7 +50,7 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 	var chapter model.Chapter
 	var out []*model.Affiliation
 	if err := model.DB.Preload("Affiliations").
-		Preload("Affiliations.Brother").
+		Preload("Affiliations.Companion").
 		Preload("Affiliations.RollingBalance").
 		Preload("Affiliations.RollingBalance.Movements", func(db *gorm.DB) *gorm.DB {
 			return db.Order("Movements.ID")
@@ -59,7 +59,7 @@ func GetChapterAffiliations(u uint) ([]*model.Affiliation, error) {
 		Preload("Affiliations.Installments").
 		Preload("Affiliations.Installments.Deposit").
 		Preload("Affiliations.Installments.Affiliation").
-		Preload("Affiliations.Installments.Affiliation.Brother").
+		Preload("Affiliations.Installments.Affiliation.Companion").
 		Preload("Affiliations.Period").First(&chapter, u).Error; err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func UpdateChapter(m *model.Chapter) error {
 	return nil
 }
 
-func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorary bool) (*model.Affiliation, error) {
+func CreateAffiliation(companion *model.Companion, chapter *model.Chapter, isHonorary bool) (*model.Affiliation, error) {
 	rollingBalance := model.RollingBalance{}
 	if err := model.DB.Create(&rollingBalance).Error; err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func CreateAffiliation(brother *model.Brother, chapter *model.Chapter, isHonorar
 	}
 	affiliation := &model.Affiliation{
 		Period:         period,
-		Brother:        brother,
+		Companion:      companion,
 		Installments:   []*model.Installment{},
 		StartDate:      time.Now(),
 		EndDate:        nil,
@@ -204,4 +204,23 @@ func GetGreatChapterStatus(chapterId uint) (*GreatChapterStatus, error) {
 		Balance:             chapter.Balance(),
 	}
 	return gcs, nil
+}
+
+func UpdateInstallments(chapterId uint, amount float64, greatChapterAmount float64, typeId uint) error {
+	err := model.DB.Transaction(func(tx *gorm.DB) error {
+		err := UpdateChargeById(typeId, amount, greatChapterAmount)
+		if err != nil {
+			return err
+		}
+		chapter, err := GetChapter(chapterId)
+		if err != nil {
+			return err
+		}
+		err = chapter.UpdateInstallments(amount, greatChapterAmount, typeId)
+		if err != nil {
+			return err
+		}
+		return model.DB.Save(chapter).Error
+	})
+	return err
 }

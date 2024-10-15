@@ -20,6 +20,7 @@ func RegisterChapterRoutesOn(r *mux.Router) {
 	r.HandleFunc(chapterPath+"/movement", createChapterMovement).Methods("POST")
 	r.HandleFunc(chapterPath+"/great-chapter", getGreatChapterStatus).Methods("GET")
 	r.HandleFunc(chapterPath+"/deposit", createDeposit).Methods("POST")
+	r.HandleFunc(chapterPath+"/update-installment", updateInstallments).Methods("POST")
 	r.HandleFunc(chapterPath, CreateChapter).Methods("POST")
 	r.HandleFunc(chapterPath, GetChapters).Methods("GET")
 	r.HandleFunc(chapterPathId, GetChapter).Methods("GET")
@@ -27,8 +28,43 @@ func RegisterChapterRoutesOn(r *mux.Router) {
 	r.HandleFunc(chapterPathId, DeleteChapter).Methods("DELETE")
 }
 
+type UpdateInstallments struct {
+	Amount             float64 `json:"amount"`
+	GreatChapterAmount float64 `json:"great_chapter_amount"`
+	TypeId             uint    `json:"type_id"`
+}
+
 type Deposit struct {
 	Installments []uint64 `json:"installments"`
+}
+
+type ChapterMovement struct {
+	Amount      float64 `json:"amount"`
+	Date        ISODate `json:"date"`
+	Receipt     string  `json:"receipt"`
+	Type        string  `json:"type"`
+	Description string  `json:"description"`
+}
+
+func updateInstallments(writer http.ResponseWriter, request *http.Request) {
+	ui := &UpdateInstallments{}
+	if err := json.NewDecoder(request.Body).Decode(ui); err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(request.Header.Get("chapter_id"))
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = services.UpdateInstallments(uint(id), ui.Amount, ui.GreatChapterAmount, ui.TypeId)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writer.WriteHeader(http.StatusCreated)
+	_, err = writer.Write([]byte(`{ "status":"Installments updated" }`))
+
 }
 
 func createDeposit(writer http.ResponseWriter, request *http.Request) {
@@ -79,19 +115,11 @@ func getGreatChapterView(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateGreatChapter.Execute(writer, nil)
+	err = executeTemplate(writer, request, templateGreatChapter, nil)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-type ChapterMovement struct {
-	Amount      float64 `json:"amount"`
-	Date        ISODate `json:"date"`
-	Receipt     string  `json:"receipt"`
-	Type        string  `json:"type"`
-	Description string  `json:"description"`
 }
 
 func createChapterMovement(writer http.ResponseWriter, request *http.Request) {
@@ -159,7 +187,7 @@ func GetChaptersView(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = templateChapters.Execute(w, nil)
+	err = executeTemplate(w, r, templateChapters, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

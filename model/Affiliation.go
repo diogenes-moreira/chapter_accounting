@@ -10,8 +10,8 @@ type Affiliation struct {
 	gorm.Model
 	PeriodID         *uint          `json:"period_id"`
 	Period           *Period        `json:"-"`
-	BrotherID        *uint          `json:"brother_id"`
-	Brother          *Brother       `json:"brother"`
+	CompanionID      *uint          `json:"companion_id"`
+	Companion        *Companion     `json:"companion"`
 	ChapterID        *uint          `json:"chapter_id"`
 	Chapter          *Chapter       `json:"-"`
 	Installments     []*Installment `json:"installments" gorm:"foreignKey:AffiliationID"`
@@ -101,8 +101,8 @@ func (a *Affiliation) UpdateInstallment(amount float64, greatChapterAmount float
 	}
 }
 
-func (a *Affiliation) BrotherName() string {
-	return a.Brother.FirstName + " " + a.Brother.LastNames
+func (a *Affiliation) CompanionName() string {
+	return a.Companion.FirstName + " " + a.Companion.LastNames
 }
 
 func (a *Affiliation) AddCharge(charge *ChargeType) {
@@ -114,13 +114,14 @@ func (a *Affiliation) AddCharge(charge *ChargeType) {
 			DueDate:            time.Now(),
 			GreatChapterAmount: charge.GreatChapterAmount,
 			Paid:               false,
+			ChargeType:         charge,
 		})
 	}
 }
 
 func (a *Affiliation) SetChapter(c *Chapter) error {
 	a.Chapter = c
-	installments, err := c.PeriodPendingInstallments(a.Brother)
+	installments, err := c.PeriodPendingInstallments(a.Companion)
 	if err != nil {
 		return err
 	}
@@ -183,4 +184,15 @@ func (a *Affiliation) OverDueGreatChapter() float64 {
 		}
 	}
 	return out
+}
+
+func (a *Affiliation) UpdateInstallments(amount float64, amount2 float64, id uint) error {
+	for _, installment := range a.Installments {
+		if !installment.Paid && installment.ChargeTypeID == id {
+			installment.Amount = amount
+			installment.GreatChapterAmount = amount2
+		}
+	}
+	return nil
+
 }

@@ -1,10 +1,10 @@
-import BrotherMovements from "./BrotherMovements.js";
+import CompanionMovements from "./CompanionMovements.js";
 
 const { ref, onMounted, inject } = Vue;
 
 
 export default {
-    components: {BrotherMovements},
+    components: {CompanionMovements},
     emits: ['changeComponent'],
     expose:['fetchAffiliations'],
     setup(props, { emit, expose })
@@ -77,13 +77,16 @@ export default {
         toggle(name, param ) {
             this.$emit("changeComponent",name, param);
         },
+        readOnly() {
+            return window.readOnly;
+        }
 
     },
     template: `
         <div>
             <h2>Afiliaciones</h2>
-            <a @click="toggle('exaltation', true)" role="button" ><i class="bi bi-plus"></i>Exaltaci&oacute;n</a>&nbsp;&nbsp;
-          <a @click="toggle('exaltation', false)" role="button" ><i class="bi bi-plus"></i>Afiliaci&oacute;n</a>
+            <a v-if="!readOnly()" @click="toggle('exaltation', true)" role="button" ><i class="bi bi-plus"></i>Exaltaci&oacute;n</a>&nbsp;&nbsp;
+          <a v-if="!readOnly()" @click="toggle('exaltation', false)" role="button" ><i class="bi bi-plus"></i>Afiliaci&oacute;n</a>
             <table class="table table-bordered">
                 <thead>
                     <tr class="align-items-center">
@@ -97,7 +100,7 @@ export default {
                 </thead>
                 <tbody>
                     <tr v-for="affiliation in affiliations">
-                        <td>{{ affiliation.brother.first_name + " " +affiliation.brother.last_names }}</td>
+                        <td>{{ affiliation.companion.first_name + " " +affiliation.companion.last_names }}</td>
                         <td>{{ notes(affiliation) }}</td>
                         <td class="text-end">{{ affiliation.overdue }}</td>
                         <td v-for="n in totalInstallments"  class="text-center">
@@ -108,13 +111,13 @@ export default {
                         <td>
                           <a @click="setAffiliation(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal" ><i class="bi bi-receipt"></i></a>&nbsp;
                           <a @click="showDetail(affiliation)" role="button" data-bs-toggle="modal" data-bs-target="#detailDeposit" ><i class="bi bi-bank"></i></a>&nbsp; 
-                          <a @click="toggle('brother_payment', affiliation)" role="button"><i class="bi bi-cash" ></i></a>&nbsp;
-                          <a @click="toggle('brother_expenses', affiliation)" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
+                          <a @click="toggle('companion_payment', affiliation)" role="button"><i class="bi bi-cash" ></i></a>&nbsp;
+                          <a @click="toggle('companion_expenses', affiliation)" role="button"><i class="bi bi-cart4"></i></a>&nbsp;
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <BrotherMovements />
+            <CompanionMovements />
             <div class="modal fade" id="detailDeposit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-scrollable">
                     <div class="modal-content">

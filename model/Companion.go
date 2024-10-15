@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-type Brother struct {
+type Companion struct {
 	gorm.Model
 	FirstName            string `json:"first_name"`
 	Email                string `json:"email"`
@@ -11,15 +11,13 @@ type Brother struct {
 	IsGreatChapterMember bool   `json:"is_great_chapter"`
 }
 
-func (b Brother) InstallmentAmount(chapter *Chapter) float64 {
-	getMonthlyCharge := GetMonthlyCharge(chapter)
-
+func (b Companion) InstallmentAmount(monthlyCharge *ChargeType) float64 {
 	if b.IsGreatChapterMember {
-		return getMonthlyCharge.GreatChapterAmount
+		return monthlyCharge.GreatChapterAmount
 	}
-	return getMonthlyCharge.Amount
+	return monthlyCharge.Amount
 }
 
-func (b Brother) GreatChapterAmount(chapter *Chapter) float64 {
-	return GetMonthlyCharge(chapter).GreatChapterAmount
+func (b Companion) GreatChapterAmount(monthlyCharge *ChargeType) float64 {
+	return monthlyCharge.GreatChapterAmount
 }

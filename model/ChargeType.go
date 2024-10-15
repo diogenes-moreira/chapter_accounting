@@ -16,25 +16,23 @@ const monthlyChargeCode = "monthly_charge"
 const exaltationChargeCode = "exaltation_charge"
 const affiliationChargeCode = "affiliation_charge"
 
-func GetMonthlyCharge(chapter *Chapter) *ChargeType {
+func GetMonthlyCharge(chapter *Chapter) (*ChargeType, error) {
 	return GetChargeType(chapter, monthlyChargeCode)
 }
 
-func GetChargeType(chapter *Chapter, code string) *ChargeType {
-	for _, chargeType := range chapter.ChargeTypes {
-		if chargeType.Code == code {
-			return chargeType
-		}
+func GetChargeType(chapter *Chapter, code string) (*ChargeType, error) {
+	var ct ChargeType
+	if err := DB.Where("chapter_id = ? AND code = ?", chapter.ID, code).First(&ct).Error; err != nil {
+		return nil, err
 	}
-	return nil
-
+	return &ct, nil
 }
 
-func GetExaltationCharge(chapter *Chapter) *ChargeType {
+func GetExaltationCharge(chapter *Chapter) (*ChargeType, error) {
 	return GetChargeType(chapter, exaltationChargeCode)
 }
 
-func GetAffiliationCharge(chapter *Chapter) *ChargeType {
+func GetAffiliationCharge(chapter *Chapter) (*ChargeType, error) {
 	return GetChargeType(chapter, affiliationChargeCode)
 }
 

@@ -1,22 +1,37 @@
 <!-- Navigation Bar -->
+<script>
+    var readOnly = {{.ReadOnly}};
+</script>
 <nav class="navbar navbar-light bg-light">
     <div class="container">
         <span class="navbar-brand">Tesoreria</span>
-
         <ul class="nav justify-content-end">
-            <li class="nav-item">
-                <a id="homeNav" class="nav-link" href="/great-chapter">Gran Capitulo</a>
-            </li>
-            <li class="nav-item">
-                <a id="homeNav" class="nav-link" href="/affiliations">Afiliaciones</a>
-            </li>
-            <li class="nav-item">
-                <a id="secondNav" class="nav-link" href="/treasury">Tesoreria</a>
-            </li>
+            {{ if $.IsTreasurer }}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Tesoreria
+                </a>
+
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a id="homeNav" class="dropdown-item" href="/great-chapter">Gran Capitulo</a></li>
+                <li><a id="homeNav" class="dropdown-item" href="/affiliations">Afiliaciones</a></li>
+                <li><a id="secondNav" class="dropdown-item" href="/treasury">Movimientos</a></li>
+            </ul></li>
+            {{ end }}
+
             <li class="nav-item">
                 <a id="thirdNav" class="nav-link" href="/change-password">Cambiar Clave</a>
             </li>
 
+            {{ if $.IsAdmin }}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Administracion
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a id="homeNav" class="dropdown-item" href="/users">Usuarios</a></li>
+                </ul></li>
+            {{ end }}
             <li class="nav-item">
                 <a id="thirdNav" class="nav-link" href="/logout">Salir</a>
             </li>

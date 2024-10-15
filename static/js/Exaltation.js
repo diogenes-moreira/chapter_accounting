@@ -12,14 +12,14 @@ export default {
             emit("changeComponent",name);
         }
         const saveExaltation = () => {
-            const url = exaltation.value ? '/api/brothers/exaltation' : '/api/brothers/affiliation';
+            const url = exaltation.value ? '/api/companions/exaltation' : '/api/companions/affiliation';
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    brother: {
+                    companion: {
                         first_name: firstName.value,
                         email: email.value,
                         phone_number: phoneNumber.value,

@@ -2,7 +2,7 @@ const { ref, inject, onMounted} = Vue;
 
 
 export default {
-    name: 'BrotherExpenses',
+    name: 'CompanionExpenses',
     setup(props, { emit, expose }) {
         const affiliation = inject('affiliation');
         const amount = ref('');
@@ -11,7 +11,7 @@ export default {
         const type = ref('');
         const types = ref([]);
         const description = ref('');
-        const saveBrotherExpenses = () => {
+        const saveCompanionExpenses = () => {
             fetch('/api/affiliations/expenses', {
                 method: 'POST',
                 headers: {
@@ -56,15 +56,15 @@ export default {
         const toggle = (name) => {
             emit("changeComponent",name);
         }
-        return {  amount, date, receipt, description, saveBrotherExpenses, toggle, affiliation, type, types };
+        return {  amount, date, receipt, description, saveCompanionExpenses, toggle, affiliation, type, types };
         },
     template: `
       <div>
-        <h1>Brother Payment</h1>
-        <form @submit.prevent="saveBrotherExpenses">
+        <h1>Companion Payment</h1>
+        <form @submit.prevent="saveCompanionExpenses">
           <div class="mb-3">
-            <p>Brother Name</p>
-            <p>{{ affiliation.brother.first_name }} {{ affiliation.brother.last_names}}</p>
+            <p>Companion Name</p>
+            <p>{{ affiliation.companion.first_name }} {{ affiliation.companion.last_names}}</p>
           </div>
           <div class="mb-3">
             <label for="type" class="form-label">Tipo</label>

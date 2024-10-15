@@ -60,3 +60,13 @@ func (d *Deposit) In(out []*Deposit) bool {
 		return false
 	}
 }
+
+func (d *Deposit) AdvancePaymentAmount() float64 {
+	out := 0.0
+	for _, installment := range d.Installments {
+		if installment.InAdvance() {
+			out += installment.GreatChapterAmount
+		}
+	}
+	return out
+}
